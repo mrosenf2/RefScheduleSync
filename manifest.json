@@ -1,27 +1,56 @@
 {
-    "name": "Arbiter CalendarSync",
-    "version": "1.0",
-    "description": "Add games from Arbiter to your Google calendar",
-    "permissions": ["storage", "declarativeContent", "tabs", "https://accounts.google.com/o/oauth2/token", "identity"],
-    "browser_action": {     
-      "default_popup": "popup.html"
-    },
-    "background": {
-        "scripts": ["auth.js", "background.js", "calendar.js","lib/moment.js", "lib/jquery.min.js"],
-        "persistent": false
-    },
-    "oauth2": {
-      "client_id": "439216554338-hs93a8g50qp7l349dfufua7spniknf6n.apps.googleusercontent.com",
-      "scopes": [
-        "https://www.googleapis.com/auth/calendar"
-      ]
-    },
-    "content_security_policy": "script-src 'self' https://calendar.google.com https://apis.google.com; object-src 'self'",
-    "content_scripts": [
-        {
-          "matches": ["*://*.arbitersports.com/Official/GameScheduleEdit.aspx", "*://www.horizonwebref.com/?pageID=1102"],          
-          "js": ["contentScript.js", "lib/moment.js", "lib/jquery.min.js"]
-        }
+  "name": "Arbiter CalendarSync",
+  "key": "MIIBIjANBgkqhkiG9w0BAQEFAAOCAQ8AMIIBCgKCAQEAqaXv3t1jWek67zLpVXIAUWPuCDmbt4KRWQJM8TSBKkvhsw9gmnmVWWzW6yieUQzMDLOJzIJZQgbgRUEvf8ozWG5Evqx+CVTtG5vWcYY5cgocq5sEbhJFiDLZQbeGt61lrjcWAnq4GlDXW9Qbd95EcMyHc80O/jzUjdWctVWTiLal4GVd1tRpKBKnE3jMD7rLGZ6hgkJjxWum2uV5a5U185bYIoLEr6OlGG3tPm0XUtoSpvNBexm6qOFRgATt6/XJlbaCremtKcO1kfoekvIcwjHDJtBfOznXvCSKRN+idQBPO9KaJzMJ/vJ2KT24G7X7W1mIpviMLP2ndMwxoibwCwIDAQAB",
+  "version": "1.0",
+  "description": "Add games from Arbiter to your Google calendar",
+  "permissions": [
+    "storage",
+    "declarativeContent",
+    "tabs",
+    "https://accounts.google.com/o/oauth2/token",
+    "identity"
+  ],
+  "browser_action": {
+    "default_popup": "popup.html"
+  },
+  "background": {
+    "scripts": [
+      "background.js",
+      "calendar.js",
+      "auth.js",
+      "lib/moment.js",
+      "lib/jquery.min.js"
+    ],
+    "persistent": false
+  },
+  "oauth2": {
+    "client_id": "439216554338-hs93a8g50qp7l349dfufua7spniknf6n.apps.googleusercontent.com",
+    "scopes": [
+      "https://www.googleapis.com/auth/calendar"
+    ]
+  },
+  "content_security_policy": "script-src 'self' https://calendar.google.com https://apis.google.com; object-src 'self'",
+  "content_scripts": [
+    {
+      "matches": [
+        "*://*.arbitersports.com/Official/GameScheduleEdit.aspx",
+        "*://www.horizonwebref.com/?pageID=1102*"
       ],
-    "manifest_version": 2
-  }
+      "js": [
+        "main.js",
+        "horizonContent.js",
+        "arbiterContent.js",
+        "lib/moment.js",
+        "lib/jquery.min.js"
+      ]
+    }
+  ],
+  "web_accessible_resources": [
+    "lib/moment.js",
+    "lib/jquery.min.js",
+    "horizonContent.js",
+    "arbiterContent.js",
+    "main.js"
+  ],
+  "manifest_version": 2
+}
