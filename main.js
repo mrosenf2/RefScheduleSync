@@ -17,9 +17,26 @@ function sendMessageToBackground(method, params) {
     });
 }
 
+/**
+ * @returns {Promise<CalEvent[]>}
+ */
+async function getEvents() {
+    let events = await sendMessageToBackground('calendar.getEvents');
+    return events;
+}
+
+/**
+ * 
+ * @param {HWRGame} gameObj 
+ */
+async function addGame(gameObj) {
+    return sendMessageToBackground('calendar.addGame', { game: gameObj });
+}
+
 var content = {
     init: function () {
         if (window.location.href.includes("horizonwebref")) {
+            var horizonContent = new HorizonContent();
             console.trace("Initializing for horizonwebref");
             sendMessageToBackground('auth.silent').then((token) => {
                 horizonContent.addSyncColumn(true, token);

@@ -18,6 +18,8 @@
       "background.js",
       "calendar.js",
       "auth.js",
+      "HWRGame.js",
+      "CalEvent.js",
       "lib/moment.js",
       "lib/jquery.min.js"
     ],
@@ -37,6 +39,8 @@
         "*://www.horizonwebref.com/?pageID=1102*"
       ],
       "js": [
+        "HWRGame.js",
+        "CalEvent.js",
         "main.js",
         "horizonContent.js",
         "arbiterContent.js",

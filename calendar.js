@@ -43,8 +43,9 @@ class CalendarService {
 
 
     /**
-    * returns promise, parameter on success is list of calendar events
-    */
+     * returns promise, parameter on success is list of calendar events
+     * @returns {Promise<any[]>}
+     */
     async getEvents() {
         console.trace(this.isInit);
         if (!this.isInit) {
@@ -71,7 +72,7 @@ class CalendarService {
     }
 
     /**
-     * @param {{gameID: string, eventDescription: string, date: string, level: string, location: string, home: string, away: string, pay: string, officials: string[]}} gameObj
+     * @param {HWRGame} gameObj
      */
     addGame(gameObj) {
         console.trace(gameObj);
@@ -79,9 +80,9 @@ class CalendarService {
             return null;
         }
         return new Promise((resolve, reject) => {
-            var startDate = gameObj.date;
-            var endDate = moment(startDate).add(80, 'minutes').format();
-            var data = {
+            let startDate = gameObj.date;
+            let endDate = moment(startDate).add(80, 'minutes').format();
+            let data = {
                 "start": {
                     "dateTime": startDate
                 },
