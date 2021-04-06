@@ -47,7 +47,7 @@ class HorizonContent {
                         chrome.runtime.sendMessage({ method: 'auth.interactive' }, (token) => {
                             //callback will have authtoken in response parameter
                             if (token) {
-                                this.sync();
+                                this.sync(false, isSignedIn);
                             }
                         });
                     };
@@ -162,59 +162,81 @@ class HorizonContent {
             return;
         }
 
-        let isCanceled = false;
+        // First, gather data from all games on page
 
         /** @type {HWRGame[]} */
         let hwrGames = [];
         for (let row of tblRows) {
             if (row.id.toLowerCase().includes("assignment")) {
                 /** @type {HTMLInputElement} */
-                let cb;
-                cb = row.cells[0].children[0];
-                let isDisabled = cb.disabled;
-                cb.disabled = true;
+                let cb = row.cells[0].children[0];
                 hwrGames.push(new HWRGame(cb, row));
+            }
+        }
 
-                var match = events.find(ev => ev.description.includes(gameObj.gameID.replace("-", "")));
-                if (match) {
-                    cb.checked = true;
-                    cb.title = match.id;
-                    gameObj.calId = match.id;
+        let doesNameExist = (game, strName) => game.officials.find(s => s.includes(strName)) != undefined;
+        // if my name does not appear on the list of officials, leave...        
+        if (hwrGames.includes(g => !doesNameExist(g, 'Rosenfeld'))) {
+            alert('Sync cancelled because you are viewing a public list');
+            return;
+        }
 
-                    // remove duplicates
-                    // TODO: avoid rate limiting
-                    let duplicateMatches = events.filter(ev => ev.description.includes(gameObj.gameID.replace("-", "")));
-                    while (duplicateMatches.length > 1) {
-                        console.log(`multipleMatches.length: ${duplicateMatches.length}`);
-                        let dupGame = duplicateMatches.pop();
-                        gameObj.calId = dupGame.id;
-                        sendMessageToBackground('calendar.removeGame', { game: gameObj }).then((isSuccess) => {
-                            if (!isSuccess) {
-                                alert("error occurred; calendar not updated");
-                            } else {
-                                console.log('removed duplicate');
-                            }
-                        });
-                    }
+        let uncheckedGames = [];
+        for (let gameObj of hwrGames) {
 
-                    gameObj.calId = match.id;
+            var match = events.find(ev => ev.description.includes(gameObj.gameID.replace("-", "")));
+            let cb = gameObj.checkbox;
+            let isDisabled = cb.isDisabled;
+            cb.disabled = true;
+            if (match) {
+                cb.checked = true;
+                cb.title = match.id;
+                gameObj.calId = match.id;
 
-                    let isUpdateDesc = match.description != gameObj.eventDescription;
-
-                    if (isUpdateDesc) {
-                        this.updateDesc(gameObj);
-                    }
-
-                } else {
-                    cb.checked = false;
-                    cb.title = "n/a";
-                    gameObj.calId = null;
+                // remove duplicates
+                // TODO: avoid rate limiting
+                let duplicateMatches = events.filter(ev => ev.description.includes(gameObj.gameID.replace("-", "")));
+                while (duplicateMatches.length > 1) {
+                    console.log(`multipleMatches.length: ${duplicateMatches.length}`);
+                    let dupGame = duplicateMatches.pop();
+                    gameObj.calId = dupGame.id;
+                    sendMessageToBackground('calendar.removeGame', { game: gameObj }).then((isSuccess) => {
+                        if (!isSuccess) {
+                            alert("error occurred; calendar not updated");
+                        } else {
+                            console.log('removed duplicate');
+                        }
+                    });
                 }
-                if (addOnClick) {
-                    cb.addEventListener('click', this.cbClicked.bind(gameObj, this));
-                }
-                cb.disabled = isDisabled;
 
+                gameObj.calId = match.id;
+
+                let isUpdateDesc = match.description != gameObj.eventDescription;
+
+                if (isUpdateDesc) {
+                    this.updateDesc(gameObj);
+                }
+
+            } else {
+                cb.checked = false;
+                cb.title = "n/a";
+                gameObj.calId = null;
+                uncheckedGames.push(gameObj);
+            }
+            if (addOnClick) {
+                cb.addEventListener('click', this.cbClicked.bind(gameObj, this));
+            }
+            cb.disabled = isDisabled;
+        }
+
+        if (prompAddGames && uncheckedGames.length > 0) {
+            let gamesToAdd = uncheckedGames.filter(g => g.isAccepted && !g.isCancelled);
+            let result = window.confirm(`add ${gamesToAdd.length} unchecked games?`);
+            if (result) {
+                for (let gameObj of gamesToAdd) {
+                    await addGame(gameObj);
+                }
+                await this.sync();
             }
         }
     };

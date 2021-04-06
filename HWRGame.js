@@ -41,6 +41,9 @@ class HWRGame {
     /** @type {boolean} */
     isCancelled;
 
+    /** @type {boolean} */
+    isAccepted = true;
+
     // TODO:
     /** @type {Number} */
     durationInMins;
@@ -114,6 +117,12 @@ class HWRGame {
             if (row.cells[GAME_DETAILS].innerText.includes("CANCELLED")) {
                 this.level = `[CANCELLED] ${this.level}`;
                 this.isCancelled = true;
+                cb.style.visibility = 'hidden';
+            }
+
+            if (row.cells[GAME_DETAILS].childElementCount >= 5) {
+                this.isAccepted = false;
+                cb.style.visibility = 'hidden';
             }
         } catch (error) {
             // ignore
