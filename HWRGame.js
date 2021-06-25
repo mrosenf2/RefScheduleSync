@@ -8,6 +8,12 @@ class HWRGame {
     /** @type {string} */
     date;
 
+    /** @type {Number} */
+    time_hrs;
+
+    /** @type {Number} */
+    time_mins;
+
     /** @type {string} */
     level;
 
@@ -91,15 +97,20 @@ class HWRGame {
         let location_text = regex_location.exec(locationMouseOver).groups.location.replace("-", " ");
 
 
-        let regex_duration = /showtip\(event, '<b><i>Game Time<\/b><\/i><font size=1><br>(.*?)<br>(?<duration>.*?)'.*\)/;
+        let regex_duration = /(\d*) hour(s?) ?(\d*)/;
         let durationMouseOver = row.cells[TIME].children[0].attributes.getNamedItem("onmouseover").value;
-        let duration_text = regex_duration.exec(durationMouseOver).groups.duration.replace("-", " ");
-
+        let duration_arr = regex_duration.exec(durationMouseOver).filter(h => (Number(h)));
+        let time_hrs = duration_arr[0];
+        let time_mins = 0;
+        if (duration_arr.length > 1)
+            time_mins = duration_arr[1];
 
 
         this.checkbox = cb;
         this.gameID = row.id;
         this.date = moment(row.cells[DATE].innerText + " " + row.cells[TIME].innerText, "MM-DD-YYYY h:m a").format();
+        this.time_hrs = Number(time_hrs);
+        this.time_mins = Number(time_mins);
         this.level = row.cells[LEVEL].innerText;
         this.location = location_text;
         this.locationURL = row.cells[LOCATION].children[0].href;

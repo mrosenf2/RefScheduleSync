@@ -81,7 +81,7 @@ class CalendarService {
         }
         return new Promise((resolve, reject) => {
             let startDate = gameObj.date;
-            let endDate = moment(startDate).add(80, 'minutes').format();
+            let endDate = moment(startDate).add(gameObj.time_hrs * 60 + gameObj.time_mins, 'minutes').format();
             let data = {
                 "start": {
                     "dateTime": startDate
@@ -90,7 +90,7 @@ class CalendarService {
                     "dateTime": endDate
                 },
                 "summary": `${gameObj.level} - ${gameObj.location}`,
-                "location": gameObj.address,
+                "location": `${gameObj.address}`,
                 "description": gameObj.eventDescription
             };
             $.ajax({
