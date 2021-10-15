@@ -36,7 +36,7 @@
     {
       "matches": [
         "*://*.arbitersports.com/Official/GameScheduleEdit.aspx",
-        "*://www.horizonwebref.com/?pageID=1102*"
+        "*://www.horizonwebref.com/?*pageID=1102*"
       ],
       "js": [
         "HWRGame.js",

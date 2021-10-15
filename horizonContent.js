@@ -4,6 +4,8 @@ class HorizonContent {
     tbID = "schedResults";
     btnIsSignedIn = "isSignedIn";
 
+    titleText = 'Official Game Schedule';
+
     /** 
      * @param {HTMLInputElement} cb 
      * @param {HTMLTableRowElement} row 
@@ -15,6 +17,12 @@ class HorizonContent {
         return gameObj;
     }
 
+    isGameSchedulePage() {
+        let titleEl = [].slice.call(document.getElementsByTagName('i'))
+            .filter(e => e.textContent.includes(this.titleText));
+        return titleEl.length > 0
+    }
+
 
     /**
     * Adds column to table. Sends info about games to background listener.
@@ -22,6 +30,10 @@ class HorizonContent {
     */
     addSyncColumn(isSignedIn) {
         console.trace();
+        if (!this.isGameSchedulePage()) {
+            console.log(`Expected title ${this.titleText} not found`)
+            return;
+        }
         let tblRows = document.getElementById(this.tbID).children[0].children;
         let totalPay = 0;
         let txtIsSignedIn;
