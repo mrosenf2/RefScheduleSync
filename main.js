@@ -1,10 +1,3 @@
-
-/**
- * content namespace
- * @namespace
- */
-
-
 function sendMessageToBackground(method, params) {
     return new Promise(function (resolve, reject) {
         chrome.runtime.sendMessage({ method: method, params: params }, function (resp) {
@@ -20,9 +13,8 @@ function sendMessageToBackground(method, params) {
 /**
  * @returns {Promise<CalEvent[]>}
  */
-async function getEvents() {
-    let events = await sendMessageToBackground('calendar.getEvents');
-    return events;
+async function getEvents(minDate, maxDate) {
+    return await sendMessageToBackground('calendar.getEvents', {minDate, maxDate});
 }
 
 /**
@@ -39,7 +31,7 @@ var content = {
             var horizonContent = new HorizonContent();
             console.trace("Initializing for horizonwebref");
             sendMessageToBackground('auth.silent').then((token) => {
-                horizonContent.addSyncColumn(true, token);
+                horizonContent.addSyncColumn(true);
                 horizonContent.sync(true);
             }).catch((err) => {
                 console.log(err);
@@ -47,10 +39,11 @@ var content = {
             });
         } else if (window.location.href.includes("arbitersports")) {
             console.trace("Initializing for arbitersports");
+            let arbiterContent = new ArbiterContent();
             chrome.runtime.sendMessage({ method: 'auth.silent' }, function (token) {
                 //callback will pass token or null
                 if (token) {
-                    arbiterContent.addSyncColumn(true, token);
+                    arbiterContent.addSyncColumn(true);
                     arbiterContent.sync(true);
                 } else {
                     arbiterContent.addSyncColumn(false);

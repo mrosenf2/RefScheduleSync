@@ -5,7 +5,7 @@ class AuthService {
 
     /**
      * determines if user is signed in or not based on if auth token is produced
-     * @param {bool} isInteractive whether or not authentication UI is displayed to the user
+     * @param {Boolean} isInteractive whether or not authentication UI is displayed to the user
      * @returns {Promise<string>} authentication token
      */
     static GetAuthToken(isInteractive = false) {
@@ -14,8 +14,7 @@ class AuthService {
             if (AuthService.AuthToken) {
                 resolve(AuthService.AuthToken);
             } else {
-                chrome.identity.getAuthToken({ 'interactive': isInteractive }, function (authToken) {
-                    console.log(authToken);
+                chrome.identity.getAuthToken({ 'interactive': isInteractive }, (authToken) => {
                     if (authToken) {
                         resolve(authToken);
                     } else {

@@ -11,8 +11,6 @@ class HorizonContent {
      * @param {HTMLTableRowElement} row 
      */
     getGameObj(cb, row) {
-
-
         let gameObj = new HWRGame(cb, row);
         return gameObj;
     }
@@ -178,21 +176,6 @@ class HorizonContent {
 
         let tbID = this.tbID;
         let tblRows = document.getElementById(tbID).children[0].children;
-        /** @type {CalEvent[]} */
-        let events;
-        try {
-            events = await getEvents();
-        } catch (err) {
-            alert(`unable to fetch events from calendar. Try refreshing the page.\n ${err}`);
-            document.getElementById(this.btnIsSignedIn).innerHTML = "Refresh";
-            for (let row of tblRows) {
-                if (row.className.toLowerCase().includes("items")) {
-                    var cb = row.cells[2].children[0];
-                    cb.disabled = true;
-                }
-            }
-            return;
-        }
 
         // First, gather data from all games on page
 
@@ -206,6 +189,21 @@ class HorizonContent {
             }
         }
 
+        /** @type {CalEvent[]} */
+        let events;
+        try {
+            let minDate = hwrGames[0].date;
+            let maxDate = hwrGames[hwrGames.length - 1].date;
+            events = await getEvents(minDate, maxDate);
+        } catch (err) {
+            alert(`unable to fetch events from calendar. Try refreshing the page.\n ${err}`);
+            document.getElementById(this.btnIsSignedIn).innerHTML = "Refresh";
+            for (let gameObj of hwrGames) {
+                gameObj.checkbox.disabled = true;
+            }
+            return;
+        }
+
         let doesNameExist = (game, strName) => game.officials.find(s => s.includes(strName)) != undefined;
         // if my name does not appear on the list of officials, leave...        
         if (hwrGames.includes(g => !doesNameExist(g, 'Rosenfeld'))) {
@@ -216,7 +214,7 @@ class HorizonContent {
         let uncheckedGames = [];
         for (let gameObj of hwrGames) {
 
-            var match = events.find(ev => ev.description.includes(gameObj.gameID.replace("-", "")));
+            var match = events.find(ev => ev.description?.includes(gameObj.gameID.replace("-", "")));
             let cb = gameObj.checkbox;
             let isDisabled = cb.isDisabled;
             cb.disabled = true;
@@ -227,7 +225,7 @@ class HorizonContent {
 
                 // remove duplicates
                 // TODO: avoid rate limiting
-                let duplicateMatches = events.filter(ev => ev.description.includes(gameObj.gameID.replace("-", "")));
+                let duplicateMatches = events.filter(ev => ev.description?.includes(gameObj.gameID.replace("-", "")));
                 while (duplicateMatches.length > 1) {
                     console.log(`multipleMatches.length: ${duplicateMatches.length}`);
                     let dupGame = duplicateMatches.pop();

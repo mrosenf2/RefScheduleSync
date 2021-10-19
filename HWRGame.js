@@ -1,4 +1,10 @@
-class HWRGame {
+class ScheduledGame {
+
+    constructor(cb, row) {
+        this.checkbox = cb;
+        this.row = row;
+    }
+
     /** @type {HTMLInputElement} */
     checkbox;
 
@@ -47,6 +53,9 @@ class HWRGame {
     /** @type {string} */
     calId;
 
+    /** @type {string} */
+    eventDescription;
+
     /** @type {boolean} */
     isCancelled;
 
@@ -57,9 +66,8 @@ class HWRGame {
     /** @type {Number} */
     durationInMins;
 
-
     getEventDescription() {
-        let eventDescription = JSON.stringify({
+        return JSON.stringify({
             Location: this.location,
             Home: this.home,
             Away: this.away,
@@ -67,27 +75,27 @@ class HWRGame {
             Pay: this.pay,
             GameID: this.gameID,
         }, null, 2).replace(/[^a-zA-Z0-9\$\. \n:&\(\)\\\/<>]/g, "").slice(0, -1);
-        return eventDescription;
     }
-
-
+}
+class HWRGame extends ScheduledGame {
+    
     /**
      * 
      * @param {HTMLInputElement} cb 
      * @param {HTMLTableRowElement} row
      */
     constructor(cb, row) {
-
+        super(cb, row);
         const GAME_ID = 0, DATE = 1, TIME = 2, LEVEL = 3, LOCATION = 6, HOME_TEAM = 4, AWAY_TEAM = 5, PAY = 7, OFFICIALS = 9, GAME_DETAILS = 10;
         let regex = /title:'(?<name>.*)',type:'',text:'(?<detail>.*)'/;
-        let officials = [];
+        let offs = [];
         let idxOfficial = 1;
         while (true) {
             try {
                 let onClick = row.cells[OFFICIALS].children[idxOfficial].attributes.getNamedItem("onclick").value;
                 let officialName = regex.exec(onClick).groups.name;
                 let officialType = regex.exec(onClick).groups.detail;
-                officials.push(`${officialName} (${officialType})`);
+                offs.push(`${officialName} (${officialType})`);
                 idxOfficial += 3;
             } catch (err) {
                 // ignore
@@ -108,41 +116,38 @@ class HWRGame {
         if (duration_arr.length > 1)
             time_mins = duration_arr[1];
 
-
-        this.checkbox = cb;
-        this.row = row;
-        this.gameID = row.id;
-        this.date = moment(row.cells[DATE].innerText + " " + row.cells[TIME].innerText, "MM-DD-YYYY h:m a").format();
-        this.time_hrs = Number(time_hrs);
-        this.time_mins = Number(time_mins);
-        this.level = row.cells[LEVEL].innerText;
-        this.location = location_text;
-        this.locationURL = row.cells[LOCATION].children[0].href;
-        this.home = row.cells[HOME_TEAM].innerText;
-        this.away = row.cells[AWAY_TEAM].innerText;
-        this.pay = row.cells[PAY].innerText;
-        this.detailsURL = row.cells[GAME_ID].children[0].href;
-        this.officials = officials;
-        this.calId = null;
+        super.gameID = row.id;
+        super.date = moment(row.cells[DATE].innerText + " " + row.cells[TIME].innerText, "MM-DD-YYYY h:m a").format();
+        super.time_hrs = Number(time_hrs);
+        super.time_mins = Number(time_mins);
+        super.level = row.cells[LEVEL].innerText;
+        super.location = location_text;
+        super.locationURL = row.cells[LOCATION].children[0].href;
+        super.home = row.cells[HOME_TEAM].innerText;
+        super.away = row.cells[AWAY_TEAM].innerText;
+        super.pay = row.cells[PAY].innerText;
+        super.detailsURL = row.cells[GAME_ID].children[0].href;
+        super.officials = offs;
+        super.calId = null;
 
         let locationURLParams = new URLSearchParams(this.locationURL);
-        this.address = locationURLParams.get('daddr');
+        super.address = locationURLParams.get('daddr');
 
         try {
             if (row.cells[GAME_DETAILS].innerText.includes("CANCELLED")) {
-                this.level = `[CANCELLED] ${this.level}`;
-                this.isCancelled = true;
+                super.level = `[CANCELLED] ${super.level}`;
+                super.isCancelled = true;
                 cb.style.visibility = 'hidden';
             }
 
             if (row.cells[GAME_DETAILS].childElementCount >= 5) {
-                this.isAccepted = false;
+                super.isAccepted = false;
                 cb.style.visibility = 'hidden';
             }
         } catch (error) {
             // ignore
         }
 
-        this.eventDescription = this.getEventDescription();
+        super.eventDescription = this.getEventDescription();
     }
 }

@@ -1,3 +1,4 @@
+'use strict';
 class CalendarService {
 
     constructor() {
@@ -7,7 +8,7 @@ class CalendarService {
         this.calID = "1hjk892r88cncfm8ctgp07r00g@group.calendar.google.com";
         this.isInit = false;
         this.authToken = '';
-        this.APIURL_get_events = 'https://www.googleapis.com/calendar/v3/calendars/{calendarId}/events?maxResults=2000&timeMin={startTime}';
+        this.APIURL_get_events = 'https://www.googleapis.com/calendar/v3/calendars/{calendarId}/events?maxResults=2000&timeMin={timeMin}&timeMax={timeMax}';
         this.APIURL_add_events = 'https://www.googleapis.com/calendar/v3/calendars/{calendarId}/events';
         this.APIURL_del_event = 'https://www.googleapis.com/calendar/v3/calendars/{calendarId}/events/{eventId}';
     }
@@ -23,15 +24,10 @@ class CalendarService {
      * Inits calendar API with up to date auth token
      */
     async init() {
-        console.trace();
         try {
             let token = await AuthService.GetAuthToken();
             this.isInit = true;
             this.authToken = token;
-            let minDate = new Date();
-            minDate.setFullYear(new Date().getFullYear() - 1);
-            this.APIURL_get_events = this.APIURL_get_events.replace('{calendarId}', encodeURIComponent(this.calID));
-            this.APIURL_get_events = this.APIURL_get_events.replace('{startTime}', minDate.toISOString());
             this.APIURL_add_events = this.APIURL_add_events.replace('{calendarId}', encodeURIComponent(this.calID));
             this.APIURL_del_event = this.APIURL_del_event.replace('{calendarId}', encodeURIComponent(this.calID));
         } catch (err) {
@@ -46,36 +42,47 @@ class CalendarService {
      * returns promise, parameter on success is list of calendar events
      * @returns {Promise<any[]>}
      */
-    async getEvents() {
-        console.trace(this.isInit);
+    async getEvents(minDate, maxDate) {
+        let isInit = this.isInit;
+        console.log({isInit});
         if (!this.isInit) {
             return null;
         }
-        let token = await AuthService.GetAuthToken();
-        return new Promise((resolve, reject) => {
-            $.ajax(this.APIURL_get_events, {
-                headers: { 'Authorization': 'Bearer ' + token },
-                success: (data) => {
-                    console.log(data);
-                    if (data.nextPageToken) {
-                        console.warn("not all events retrieved");
-                    }
-                    resolve(data.items);
+        let url = this.getAPIURL_get_events(minDate, maxDate);
 
-                }, error: (response) => {
-                    console.log(response);
-                    reject(response);
-                }
+        try {
+            let token = await AuthService.GetAuthToken();
+            let resp = await fetch(url, {
+                method: 'get',
+                headers: { 'Authorization': 'Bearer ' + token },
             });
-        });
+            let data = await resp.json();
+            console.table(data.items)
+            return data.items;
+        } catch (error) {
+            console.error(error);
+            return [];
+        }
 
     }
 
+    getAPIURL_get_events(minDate, maxDate) {
+        let timeMin = new Date(minDate);
+        timeMin.setDate(timeMin.getDate() - 7);
+        let timeMax = new Date(maxDate);
+        timeMax.setDate(timeMax.getDate() + 7);
+
+        return this.APIURL_get_events
+            .replace('{calendarId}', encodeURIComponent(this.calID))
+            .replace('{timeMin}', timeMin.toISOString())
+            .replace('{timeMax}', timeMax.toISOString());
+    }
+
     /**
-     * @param {HWRGame} gameObj
+     * @param {ScheduledGame} gameObj
      */
     addGame(gameObj) {
-        console.trace(gameObj);
+        console.log("adding game", gameObj);
         if (!this.isInit) {
             return null;
         }
@@ -111,7 +118,7 @@ class CalendarService {
     };
 
     remGame(eventID) {
-        console.trace();
+        console.log("removing game", eventID);
         if (!this.isInit) {
             return null;
         }

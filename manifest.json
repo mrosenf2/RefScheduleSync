@@ -19,6 +19,7 @@
       "calendar.js",
       "auth.js",
       "HWRGame.js",
+      "ARBGame.js",
       "CalEvent.js",
       "lib/moment.js",
       "lib/jquery.min.js"
@@ -40,6 +41,7 @@
       ],
       "js": [
         "HWRGame.js",
+        "ARBGame.js",
         "CalEvent.js",
         "main.js",
         "horizonContent.js",

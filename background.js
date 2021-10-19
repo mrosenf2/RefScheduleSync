@@ -37,7 +37,7 @@ let background = {
 
         case 'calendar.getEvents':
 
-          cal.getEvents().then(function (result) {
+          cal.getEvents(params.minDate, params.maxDate).then(function (result) {
             opt_callback({ body: result });
           }, function (err) {
             console.log(err);
