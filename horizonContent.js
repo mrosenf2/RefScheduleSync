@@ -37,14 +37,15 @@ class HorizonContent {
         let tblRows = document.getElementById(this.tbID).children[0].children;
         let totalPay = 0;
         let txtIsSignedIn;
+        /** @type {HWRGame[]} */
         let stgGames = [];
         /** @type {boolean} */
         let isAccepted;
         for (let row of tblRows) {
             if (row.cells) {
                 if (!row.id.toLowerCase().includes("assignment")) {
-                    row.cells[0].style = "white-space:nowrap;";
-                    row.cells[1].style = "white-space:nowrap;";
+                    row.cells[0].style = "white-space: nowrap;";
+                    row.cells[1].style = "white-space: nowrap;";
                     txtIsSignedIn = document.createElement("p");
                     if (isSignedIn) {
                         txtIsSignedIn.innerHTML = "Sync";
@@ -78,11 +79,30 @@ class HorizonContent {
                         console.trace('cb.disabled = true');
                     }
                     row.cells[0].replaceChildren(cb);
-                    var gameObj = this.getGameObj(cb, row);
+                    let gameObj = this.getGameObj(cb, row);
+                    
                     stgGames.push(gameObj);
                     totalPay += Number(gameObj.pay.replace(/[^0-9.-]+/g, ""));
                 }
             }
+        }
+        for (let i = 0; i < stgGames.length - 1; i++) {
+            const g1 = stgGames[i];
+            const g2 = stgGames[i + 1];
+            if (checkTimeBetweenGames(g1, g2)) {
+                g2.row.style = "background: orange;";
+                console.log(g2.row);
+            }
+            
+        }
+
+        function checkTimeBetweenGames(g1, g2) {
+            const date1 = new Date(g1.date);
+            const date2 = new Date(g2.date);
+
+            return date1.toDateString() == date2.toDateString()
+                && date2.getHours() <= date1.getHours() + 3
+                && g1.location != g2.location;
         }
     }
 

@@ -2,6 +2,9 @@ class HWRGame {
     /** @type {HTMLInputElement} */
     checkbox;
 
+    /** @type {HTMLTableRowElement} */
+    row;
+
     /** @type {string} */
     gameID;
 
@@ -107,6 +110,7 @@ class HWRGame {
 
 
         this.checkbox = cb;
+        this.row = row;
         this.gameID = row.id;
         this.date = moment(row.cells[DATE].innerText + " " + row.cells[TIME].innerText, "MM-DD-YYYY h:m a").format();
         this.time_hrs = Number(time_hrs);
