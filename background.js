@@ -6,8 +6,11 @@
 
 
 
-let background = {
+function sleep(ms) {
+  return new Promise(resolve => setTimeout(resolve, ms || DEF_DELAY));
+}
 
+let background = {
 
   listenForRequests_: function () {
 
@@ -35,8 +38,15 @@ let background = {
           );
           break;
 
+        case 'calendar.getCalendars':
+          cal.getCalendars().then(function (result) {
+            opt_callback({ body: result });
+          }, function (err) {
+            console.log(err);
+            opt_callback({ err: err.message });
+          });
+          break;
         case 'calendar.getEvents':
-
           cal.getEvents(params.minDate, params.maxDate).then(function (result) {
             opt_callback({ body: result });
           }, function (err) {
@@ -63,6 +73,22 @@ let background = {
               opt_callback({ err: err.message });
             }
           );
+          break;
+        case 'console.log':
+          throw 'Not Implemented'
+          console.log('logging', params.data);
+          logData = params.data;
+          opt_callback({ body: undefined });
+          break;
+        case 'console.listen':
+          throw 'Not Implemented'
+          while (!logData) {
+            console.log('waiting...', logData);
+            await sleep(150);
+          }
+          console.log('sending', logData);
+          opt_callback({ body: logData });
+          logData = undefined;
           break;
       }
     };

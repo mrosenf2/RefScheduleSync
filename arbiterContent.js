@@ -77,6 +77,7 @@ class ArbiterContent {
         if (gameObj.checkbox.checked) {
             //add game to calendar
             gameObj.checkbox.disabled = true;
+            await gameObj.init();
             let onError = (err) => {
                 gameObj.checkbox.checked = false;
                 alert(`error occurred; calendar not updated \n${err}`);
@@ -152,7 +153,6 @@ class ArbiterContent {
         let uncheckedGames = [];
         let isCanceled = false;
         for (let gameObj of arbGames) {
-            await gameObj.init();
             let cb = gameObj.checkbox;
             let row = gameObj.row;
             if (row.cells.length >= 11) {
