@@ -10,7 +10,6 @@ class AuthService {
      */
     static GetAuthToken(isInteractive = false) {
         return new Promise((resolve, reject) => {
-            console.trace();
             if (AuthService.AuthToken) {
                 resolve(AuthService.AuthToken);
             } else {

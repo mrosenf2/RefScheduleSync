@@ -15,12 +15,12 @@
   },
   "background": {
     "scripts": [
-      "background.js",
-      "calendar.js",
+      "BackgroundScript.js",
+      "services/CalendarService.js",
       "auth.js",
+      "types/ScheduledGame.js",
       "HWRGame.js",
       "ARBGame.js",
-      "CalEvent.js",
       "lib/moment.js",
       "lib/jquery.min.js"
     ],
@@ -40,9 +40,11 @@
         "*://www.horizonwebref.com/?*pageID=1102*"
       ],
       "js": [
+        "types/ScheduledGame.js",
         "HWRGame.js",
         "ARBGame.js",
-        "CalEvent.js",
+        "types/CalEvent.js",
+        "services/BackgroundListenerService.js",
         "main.js",
         "horizonContent.js",
         "arbiterContent.js",
@@ -51,12 +53,6 @@
       ]
     }
   ],
-  "web_accessible_resources": [
-    "lib/moment.js",
-    "lib/jquery.min.js",
-    "horizonContent.js",
-    "arbiterContent.js",
-    "main.js"
-  ],
+  
   "manifest_version": 2
 }

@@ -18,7 +18,7 @@ class HorizonContent {
     isGameSchedulePage() {
         let titleEl = [].slice.call(document.getElementsByTagName('i'))
             .filter(e => e.textContent.includes(this.titleText));
-        return titleEl.length > 0
+        return titleEl.length > 0;
     }
 
 
@@ -27,9 +27,8 @@ class HorizonContent {
     * @param {boolean} isSignedIn
     */
     addSyncColumn(isSignedIn) {
-        console.trace();
         if (!this.isGameSchedulePage()) {
-            console.log(`Expected title ${this.titleText} not found`)
+            console.log(`Expected title ${this.titleText} not found`);
             return;
         }
         let tblRows = document.getElementById(this.tbID).children[0].children;
@@ -53,9 +52,9 @@ class HorizonContent {
                         txtIsSignedIn.title = "Sign In";
                     }
                     txtIsSignedIn.id = this.btnIsSignedIn;
-                    txtIsSignedIn.style = "white-space:nowrap;color:White;cursor:pointer;";
+                    txtIsSignedIn.style = "white-space: nowrap; color: White; cursor: pointer;";
                     txtIsSignedIn.onclick = () => {
-                        chrome.runtime.sendMessage({ method: 'auth.interactive' }, (token) => {
+                        sendMessageToBackground('auth.interactive').then((token) => {
                             //callback will have authtoken in response parameter
                             if (token) {
                                 this.sync(false, isSignedIn);
@@ -78,7 +77,7 @@ class HorizonContent {
                     }
                     row.cells[0].replaceChildren(cb);
                     let gameObj = this.getGameObj(cb, row);
-                    
+
                     stgGames.push(gameObj);
                     totalPay += Number(gameObj.pay.replace(/[^0-9.-]+/g, ""));
                 }
@@ -91,16 +90,31 @@ class HorizonContent {
                 g2.row.style = "background: orange;";
                 console.log(g2.row);
             }
-            
+
         }
 
+        /**
+         * @param {HWRGame} g1 
+         * @param {HWRGame} g2 
+         * @returns {Boolean}
+         */
         function checkTimeBetweenGames(g1, g2) {
+            if (g1.address == g2.address) {
+                return false;
+            }
+
             const date1 = new Date(g1.date);
             const date2 = new Date(g2.date);
 
             return date1.toDateString() == date2.toDateString()
-                && date2.getHours() <= date1.getHours() + 3
-                && g1.location != g2.location;
+                && getHoursAndMins(date2) <= getHoursAndMins(date1) + g1.time_hrs + (g1.time_mins / 60) + 1;
+        }
+
+        /**
+         * @param {Date} d 
+         */
+        function getHoursAndMins(d) {
+            return d.getHours() + d.getMinutes() / 60;
         }
     }
 
@@ -172,8 +186,6 @@ class HorizonContent {
     }
 
     async sync(addOnClick = false, prompAddGames = false) {
-        console.trace();
-
         let tbID = this.tbID;
         let tblRows = document.getElementById(tbID).children[0].children;
 

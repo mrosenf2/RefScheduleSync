@@ -1,30 +1,23 @@
 var API_KEY = 'AIzaSyAzEVzT8vSow_yUZbzjGnlAmhVaaFVR9Og';
 console.log('in popup')
+console.log(window.location.href)
 /**
  * When the popup is loaded, fetch the events in this tab from the
  * background page, set up the appropriate layout, etc.
  */
 
-
-let log = async (...data) => {
-    try {
-        await consoleLog('popup:', ...data);
-    } catch (error) {
-        console.warn('error logging', data, error);
-    }
-}
-
 let popupContent = {
     
     init: async function () {
-
-        log('works')
         try {
             /** @type {HTMLSelectElement} */
             let select = document.getElementById('drpdwnCalendars');
             select.onchange = function (evt) { 
                 console.log(evt.target.value);
             };
+
+            const localStorage = await LocalStorageService.GetAllStorageSyncData();
+            document.getElementById('title').innerHTML = localStorage.location;
 
 
             const token = await sendMessageToBackground('auth.silent');
@@ -36,7 +29,7 @@ let popupContent = {
                 select.appendChild(opt);
             });
         } catch (error) {
-            console.log(err);
+            console.log(error);
         }
     }
 };
