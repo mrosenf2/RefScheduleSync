@@ -1,5 +1,5 @@
 'use strict';
-class CalendarService {
+class BGCalendarService {
 
     constructor() {
         /**
@@ -15,7 +15,7 @@ class CalendarService {
     }
 
     static async GetInstance() {
-        let instance = new CalendarService();
+        let instance = new BGCalendarService();
         await instance.init();
         return instance;
     }
@@ -26,7 +26,7 @@ class CalendarService {
      */
     async init() {
         try {
-            let token = await AuthService.GetAuthToken();
+            let token = await BGAuthService.GetAuthToken();
             this.isInit = true;
             this.authToken = token;
             this.APIURL_add_events = this.APIURL_add_events.replace('{calendarId}', encodeURIComponent(this.calID));
@@ -73,7 +73,7 @@ class CalendarService {
     }
 
     async Get(url) {
-        let token = await AuthService.GetAuthToken();
+        let token = await BGAuthService.GetAuthToken();
         let resp = await fetch(url, {
             method: 'get',
             headers: { 'Authorization': 'Bearer ' + token },
@@ -119,6 +119,28 @@ class CalendarService {
     }
 
     /**
+     * @param {RequestInfo} url
+     */
+    async Delete(url) {
+        try {
+            const response = await fetch(url, {
+                method: 'DELETE', // *GET, POST, PUT, DELETE, etc.
+                // mode: 'cors', // no-cors, *cors, same-origin
+                cache: 'no-cache', // *default, no-cache, reload, force-cache, only-if-cached
+                credentials: 'same-origin', // include, *same-origin, omit
+                headers: {
+                    'Authorization': 'Bearer ' + this.authToken
+                }
+            });
+            return { ok: response.ok };
+
+        } catch (error) {
+            console.log(error);
+            return { ok: false, data: error };
+        }
+    }
+
+    /**
      * @param {ScheduledGame} gameObj
      */
     async addGame(gameObj) {
@@ -128,6 +150,7 @@ class CalendarService {
         }
 
         let startDate = gameObj.date;
+        // @ts-ignore
         let endDate = moment(startDate).add(gameObj.time_hrs * 60 + gameObj.time_mins, 'minutes').format();
         let data = {
             "start": {
@@ -153,28 +176,23 @@ class CalendarService {
         
     };
 
-    remGame(eventID) {
+    /**
+     * @param {string | number | boolean} eventID
+     */
+    async remGame(eventID) {
         console.log("removing game", eventID);
         if (!this.isInit) {
             return null;
         }
         const url = this.APIURL_del_event.replace('{eventId}', encodeURIComponent(eventID))
-        return new Promise((resolve, reject) => {
-            $.ajax({
-                url: url,
-                type: "DELETE",
-                headers: { 'Authorization': 'Bearer ' + this.authToken },
-                success: (data) => {
-                    console.log(data);
-                    resolve(true);
-
-                }, error: (response) => {
-                    console.error(response);
-                    reject(response);
-                }
-            });
-        });
-
+        try {
+            const response = await this.Delete(url);
+            console.log(response);
+            return response.ok;
+        } catch (error) {
+            console.log(error);
+            return error;
+        }
     };
 
 }

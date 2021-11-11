@@ -17,7 +17,7 @@ class HorizonContent {
 
     isGameSchedulePage() {
         let titleEl = [].slice.call(document.getElementsByTagName('i'))
-            .filter(e => e.textContent.includes(this.titleText));
+            .filter((/** @type {{ textContent: string | string[]; }} */ e) => e.textContent.includes(this.titleText));
         return titleEl.length > 0;
     }
 
@@ -31,18 +31,25 @@ class HorizonContent {
             console.log(`Expected title ${this.titleText} not found`);
             return;
         }
-        let tblRows = document.getElementById(this.tbID).children[0].children;
-        let totalPay = 0;
+
+        let tblRows = /** @type {HTMLCollectionOf<HTMLTableRowElement>} */
+            (document.getElementById(this.tbID).children[0].children);
+
         let txtIsSignedIn;
         /** @type {HWRGame[]} */
         let stgGames = [];
         /** @type {boolean} */
         let isAccepted;
+
         for (let row of tblRows) {
             if (row.cells) {
                 if (!row.id.toLowerCase().includes("assignment")) {
-                    row.cells[0].style = "white-space: nowrap;";
-                    row.cells[1].style = "white-space: nowrap;";
+                    /** @type {CSSStyleDeclaration} */
+                    let s;
+
+                    row.cells[0].style.whiteSpace = 'nowrap';
+                    row.cells[1].style.whiteSpace = 'nowrap';
+
                     txtIsSignedIn = document.createElement("p");
                     if (isSignedIn) {
                         txtIsSignedIn.innerHTML = "Sync";
@@ -52,14 +59,20 @@ class HorizonContent {
                         txtIsSignedIn.title = "Sign In";
                     }
                     txtIsSignedIn.id = this.btnIsSignedIn;
-                    txtIsSignedIn.style = "white-space: nowrap; color: White; cursor: pointer;";
-                    txtIsSignedIn.onclick = () => {
-                        sendMessageToBackground('auth.interactive').then((token) => {
-                            //callback will have authtoken in response parameter
+                    txtIsSignedIn.style.whiteSpace = 'nowrap';
+                    txtIsSignedIn.style.color = 'White';
+                    txtIsSignedIn.style.fontStyle = 'bold';
+                    txtIsSignedIn.style.cursor = 'pointer';
+
+                    txtIsSignedIn.onclick = async () => {
+                        try {
+                            const token = await AuthService.AuthInteractive();
                             if (token) {
                                 this.sync(false, isSignedIn);
                             }
-                        });
+                        } catch (err) {
+                            console.error(err);
+                        }
                     };
                     row.cells[0].append(txtIsSignedIn);
                 }
@@ -79,7 +92,6 @@ class HorizonContent {
                     let gameObj = this.getGameObj(cb, row);
 
                     stgGames.push(gameObj);
-                    totalPay += Number(gameObj.pay.replace(/[^0-9.-]+/g, ""));
                 }
             }
         }
@@ -87,7 +99,7 @@ class HorizonContent {
             const g1 = stgGames[i];
             const g2 = stgGames[i + 1];
             if (checkTimeBetweenGames(g1, g2)) {
-                g2.row.style = "background: orange;";
+                g2.row.style.background = "orange";
                 console.log(g2.row);
             }
 
@@ -118,8 +130,12 @@ class HorizonContent {
         }
     }
 
-    cbClicked(content) {
-        HorizonContent.onCBClicked(this, content);
+
+    /**
+     * @param {HWRGame} game
+     */
+    cbClicked(game) {
+        HorizonContent.onCBClicked(game, this);
     }
 
 
@@ -133,8 +149,9 @@ class HorizonContent {
         if (gameObj.checkbox.checked) {
             //add game to calendar
             gameObj.checkbox.disabled = true;
-            let onError = (err) => {
+            let onError = (/** @type {any} */ err) => {
                 gameObj.checkbox.checked = false;
+                console.log(`error occurred; calendar not updated \n${err}`);
                 alert(`error occurred; calendar not updated \n${err}`);
             };
             addGame(gameObj).then((isSuccess) => {
@@ -185,9 +202,12 @@ class HorizonContent {
         });
     }
 
-    async sync(addOnClick = false, prompAddGames = false) {
+    async sync(addOnClick = false, isInteractive = false) {
         let tbID = this.tbID;
-        let tblRows = document.getElementById(tbID).children[0].children;
+
+
+        let tblRows = /** @type {HTMLCollectionOf<HTMLTableRowElement>} */
+            (document.getElementById(tbID).children[0].children);
 
         // First, gather data from all games on page
 
@@ -195,20 +215,25 @@ class HorizonContent {
         let hwrGames = [];
         for (let row of tblRows) {
             if (row.id.toLowerCase().includes("assignment")) {
-                /** @type {HTMLInputElement} */
-                let cb = row.cells[0].children[0];
+
+                let cb = /** @type {HTMLInputElement} */ (row.cells[0].children[0]);
                 hwrGames.push(new HWRGame(cb, row));
             }
         }
 
         /** @type {CalEvent[]} */
         let events;
+        if (hwrGames.length == 0) {
+            return;
+        }
         try {
             let minDate = hwrGames[0].date;
             let maxDate = hwrGames[hwrGames.length - 1].date;
             events = await getEvents(minDate, maxDate);
         } catch (err) {
-            alert(`unable to fetch events from calendar. Try refreshing the page.\n ${err}`);
+            const msg = `unable to fetch events from calendar. Try refreshing the page.\n ${err}`;
+            alert(msg);
+            console.log(msg);
             document.getElementById(this.btnIsSignedIn).innerHTML = "Refresh";
             for (let gameObj of hwrGames) {
                 gameObj.checkbox.disabled = true;
@@ -216,9 +241,10 @@ class HorizonContent {
             return;
         }
 
-        let doesNameExist = (game, strName) => game.officials.find(s => s.includes(strName)) != undefined;
+        let doesNameExist = (/** @type { HWRGame } */ game, /** @type {string} */ strName) => game.officials.find(s => s.includes(strName)) != undefined;
         // if my name does not appear on the list of officials, leave...        
-        if (hwrGames.includes(g => !doesNameExist(g, 'Rosenfeld'))) {
+        if (hwrGames.find(g => !doesNameExist(g, 'Rosenfeld'))) {
+            console.log('Sync cancelled because you are viewing a public list');
             alert('Sync cancelled because you are viewing a public list');
             return;
         }
@@ -228,7 +254,7 @@ class HorizonContent {
 
             var match = events.find(ev => ev.description?.includes(gameObj.gameID.replace("-", "")));
             let cb = gameObj.checkbox;
-            let isDisabled = cb.isDisabled;
+            let isDisabled = cb.disabled;
             cb.disabled = true;
             if (match) {
                 cb.checked = true;
@@ -266,19 +292,23 @@ class HorizonContent {
                 uncheckedGames.push(gameObj);
             }
             if (addOnClick) {
-                cb.addEventListener('click', this.cbClicked.bind(gameObj, this));
+                cb.addEventListener('click', this.cbClicked.bind(this, gameObj));
             }
             cb.disabled = isDisabled;
         }
 
-        if (prompAddGames && uncheckedGames.length > 0) {
-            let gamesToAdd = uncheckedGames.filter(g => g.isAccepted && !g.isCancelled);
-            let result = window.confirm(`add ${gamesToAdd.length} unchecked games?`);
-            if (result) {
-                for (let gameObj of gamesToAdd) {
-                    await addGame(gameObj);
+        if (isInteractive) {
+            if (uncheckedGames.length > 0) {
+                let gamesToAdd = uncheckedGames.filter(g => g.isAccepted && !g.isCancelled);
+                let result = window.confirm(`add ${gamesToAdd.length} unchecked games?`);
+                if (result) {
+                    for (let gameObj of gamesToAdd) {
+                        await addGame(gameObj);
+                    }
+                    await this.sync();
                 }
-                await this.sync();
+            } else {
+                alert('no unchecked games to add');
             }
         }
     };

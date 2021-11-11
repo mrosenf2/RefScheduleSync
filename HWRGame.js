@@ -31,22 +31,25 @@ class HWRGame extends ScheduledGame {
 
         let regex_duration = /(\d*) hour(s?) ?(\d*)/;
         let durationMouseOver = row.cells[TIME].children[0].attributes.getNamedItem("onmouseover").value;
-        let duration_arr = regex_duration.exec(durationMouseOver).filter(h => (Number(h)));
+        let duration_arr = regex_duration.exec(durationMouseOver).filter(h => (Number(h))).map(n => Number(n));
         let time_hrs = duration_arr[0];
         let time_mins = 0;
         if (duration_arr.length > 1)
             time_mins = duration_arr[1];
 
         super.gameID = row.id;
+        // @ts-ignore
         super.date = moment(row.cells[DATE].innerText + " " + row.cells[TIME].innerText, "MM-DD-YYYY h:m a").format();
         super.time_hrs = Number(time_hrs);
         super.time_mins = Number(time_mins);
         super.level = row.cells[LEVEL].innerText;
         super.location = location_text;
+        // @ts-ignore
         super.locationURL = row.cells[LOCATION].children[0].href;
         super.home = row.cells[HOME_TEAM].innerText;
         super.away = row.cells[AWAY_TEAM].innerText;
         super.pay = row.cells[PAY].innerText;
+        // @ts-ignore
         super.detailsURL = row.cells[GAME_ID].children[0].href;
         super.officials = offs;
         super.calId = null;

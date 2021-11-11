@@ -1,29 +1,29 @@
 let content = {
     init: async function () {
+
+        /** @type {HorizonContent | ArbiterContent} */
+        let scheduler;
         if (window.location.href.includes("horizonwebref")) {
-            var horizonContent = new HorizonContent();
+            scheduler = new HorizonContent();
             console.log("Initializing for horizonwebref");
             LocalStorageService.SetValue('location', 'Horizon');
-            sendMessageToBackground('auth.silent').then((token) => {
-                horizonContent.addSyncColumn(true);
-                horizonContent.sync(true);
-            }).catch((err) => {
-                console.log(err);
-                horizonContent.addSyncColumn(false);
-            });
         } else if (window.location.href.includes("arbitersports")) {
+            scheduler = new ArbiterContent();
             console.log("Initializing for arbitersports");
             LocalStorageService.SetValue('location', 'Arbiter');
-            let arbiterContent = new ArbiterContent();
-            chrome.runtime.sendMessage({ method: 'auth.silent' }, function (token) {
-                //callback will pass token or null
-                if (token) {
-                    arbiterContent.addSyncColumn(true);
-                    arbiterContent.sync(true);
-                } else {
-                    arbiterContent.addSyncColumn(false);
-                }
-            });
+        }
+
+        LocalStorageService.addListener('SelectedCalID', (newValue) => {
+            console.log(newValue);
+        })
+
+        try {
+            const token = await AuthService.AuthSilent();
+            scheduler.addSyncColumn(true);
+            scheduler.sync(true);
+        } catch (err) {
+            console.log(err);
+            scheduler.addSyncColumn(false);
         }
     }
 };

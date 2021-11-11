@@ -15,9 +15,9 @@
   },
   "background": {
     "scripts": [
-      "BackgroundScript.js",
-      "services/CalendarService.js",
-      "auth.js",
+      "background_scripts/BackgroundScript.js",
+      "background_scripts/CalendarService.js",
+      "background_scripts/auth.js",
       "types/ScheduledGame.js",
       "HWRGame.js",
       "ARBGame.js",
@@ -45,6 +45,7 @@
         "ARBGame.js",
         "types/CalEvent.js",
         "services/BackgroundListenerService.js",
+        "services/LocalStorageService.js",
         "main.js",
         "horizonContent.js",
         "arbiterContent.js",

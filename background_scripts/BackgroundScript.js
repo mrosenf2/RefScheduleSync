@@ -1,14 +1,14 @@
 /**
  * @callback myCallback
- * @param {{body: any, err: any}} resp
+ * @param {{body?: any, err?: any}} resp
  */
 
 
 
 
-function sleep(ms) {
-  return new Promise(resolve => setTimeout(resolve, ms || DEF_DELAY));
-}
+// function sleep(ms) {
+//   return new Promise(resolve => setTimeout(resolve, ms || DEF_DELAY));
+// }
 
 let background = {
 
@@ -17,10 +17,10 @@ let background = {
     let listen = async (request, /** @type {myCallback} */ opt_callback) => {
       let method = request.method;
       let params = request.params;
-      let cal = await CalendarService.GetInstance();
+      let cal = await BGCalendarService.GetInstance();
       switch (method) {
         case 'auth.interactive':
-          AuthService.GetAuthToken(true).then((result) => {
+          BGAuthService.GetAuthToken(true).then((result) => {
             opt_callback({ body: result });
           }, (err) => {
             console.log(err);
@@ -29,7 +29,7 @@ let background = {
           break;
 
         case 'auth.silent':
-          AuthService.GetAuthToken(false).then(
+          BGAuthService.GetAuthToken(false).then(
             function (result) {
               opt_callback({ body: result });
             }, function (err) {
@@ -77,9 +77,10 @@ let background = {
         
       }
     };
+    // @ts-ignore
     chrome.extension.onMessage.addListener((request, sender, opt_callback) => {
 
-      _ = listen(request, opt_callback);
+      listen(request, opt_callback);
 
       // Indicates to Chrome that a pending async request will eventually issue
       // the callback passed to this function.
