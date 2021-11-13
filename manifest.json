@@ -18,6 +18,7 @@
       "background_scripts/BackgroundScript.js",
       "background_scripts/CalendarService.js",
       "background_scripts/auth.js",
+      "services/LocalStorageService.js",
       "types/ScheduledGame.js",
       "HWRGame.js",
       "ARBGame.js",
@@ -39,12 +40,12 @@
         "*://*.arbitersports.com/Official/GameScheduleEdit.aspx",
         "*://www.horizonwebref.com/?*pageID=1102*"
       ],
+      "css": ["main.css"],
       "js": [
         "types/ScheduledGame.js",
         "HWRGame.js",
         "ARBGame.js",
-        "types/CalEvent.js",
-        "services/BackgroundListenerService.js",
+        "services/ipc.js",
         "services/LocalStorageService.js",
         "main.js",
         "horizonContent.js",

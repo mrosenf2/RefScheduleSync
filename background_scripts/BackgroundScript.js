@@ -1,84 +1,68 @@
 /**
  * @callback myCallback
- * @param {{body?: any, err?: any}} resp
+ * @param {{ok: boolean, data?: any, err?: any}} resp
  */
 
+/**
+ * @typedef {{ method: serviceName; params: any; }} RequestMessage
+ */
 
+/**
+ * @typedef { ""
+ * | "auth.interactive" 
+ * | "auth.silent" 
+ * | "auth.clearAllCachedAuthTokens"
+ * | "calendar.getCalendars"
+ * | "calendar.getEvents"
+ * | "calendar.addGame"
+ * | "calendar.removeGame"
+ * } serviceName
+ */
 
-
-// function sleep(ms) {
-//   return new Promise(resolve => setTimeout(resolve, ms || DEF_DELAY));
-// }
 
 let background = {
 
   listenForRequests_: function () {
 
-    let listen = async (request, /** @type {myCallback} */ opt_callback) => {
+    let listen = async (/** @type {RequestMessage} */ request, /** @type {myCallback} */ opt_callback) => {
       let method = request.method;
       let params = request.params;
       let cal = await BGCalendarService.GetInstance();
+      /** @type {Promise<any>} */
+      let serviceCall;
       switch (method) {
         case 'auth.interactive':
-          BGAuthService.GetAuthToken(true).then((result) => {
-            opt_callback({ body: result });
-          }, (err) => {
-            console.log(err);
-            opt_callback({ err: err.message });
-          });
+          serviceCall = BGAuthService.GetAuthToken(true);
           break;
-
         case 'auth.silent':
-          BGAuthService.GetAuthToken(false).then(
-            function (result) {
-              opt_callback({ body: result });
-            }, function (err) {
-              opt_callback({ err: err.message });
-            }
-          );
+          serviceCall = BGAuthService.GetAuthToken(false);
+          break;
+        case 'auth.clearAllCachedAuthTokens':
+          serviceCall = BGAuthService.ClearAllCachedAuthTokens();
           break;
 
         case 'calendar.getCalendars':
-          cal.getCalendars().then(function (result) {
-            opt_callback({ body: result });
-          }, function (err) {
-            console.log(err);
-            opt_callback({ err: err.message });
-          });
+          serviceCall = cal.getCalendars();
           break;
         case 'calendar.getEvents':
-          cal.getEvents(params.minDate, params.maxDate).then(function (result) {
-            opt_callback({ body: result });
-          }, function (err) {
-            console.log(err);
-            opt_callback({ err: err.message });
-          });
+          serviceCall = cal.getEvents(params.minDate, params.maxDate);
           break;
         case 'calendar.addGame':
-          cal.addGame(params.game).then(
-            function (result) {
-              opt_callback({ body: result });
-            }, function (err) {
-              console.log(err);
-              opt_callback({ err: err.message });
-            }
-          );
+          serviceCall = cal.addGame(params.game);
           break;
         case 'calendar.removeGame':
-          cal.remGame(params.game.calId).then(
-            function (result) {
-              opt_callback({ body: result });
-            }, function (err) {
-              console.log(err);
-              opt_callback({ err: err.message });
-            }
-          );
+          serviceCall = cal.remGame(params.game.calId);
           break;
-        
+
       }
+      serviceCall.then((result) => {
+        opt_callback({ ok: true, data: result });
+      }).catch((err) => {
+        console.log(err);
+        opt_callback({ ok: false, data: err });
+      });
     };
-    // @ts-ignore
-    chrome.extension.onMessage.addListener((request, sender, opt_callback) => {
+    chrome.runtime.onMessage.addListener((/** @type {RequestMessage} */ request, sender, /** @type {myCallback} */ opt_callback) => {
 
       listen(request, opt_callback);
 

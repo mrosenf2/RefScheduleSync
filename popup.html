@@ -19,10 +19,10 @@
   <p id="title">Google Calendar API Quickstart</p>
 
   <!--Add buttons to initiate auth sequence and sign out-->
-  <button id="authorize_button">Authorize</button>
-  <button id="signout_button">Sign Out</button>
+  <button hidden id="authorize_button">Authorize</button>
+  <button hidden id="signout_button">Sign Out</button>
 
-  <select id="drpdwnCalendars"></select>
+  <select hidden id="drpdwnCalendars"></select>
 
   <pre id="content" style="white-space: pre-wrap;"></pre>
 
@@ -30,7 +30,7 @@
   <script src="lib/jquery.min.js"></script>
   <script src="popup.js"> </script>
   <script src="services/LocalStorageService.js"> </script>
-  <script src="services/BackgroundListenerService.js"> </script>
+  <script src="services/ipc.js"> </script>
 </body>
 
 </html>

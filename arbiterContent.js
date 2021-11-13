@@ -3,23 +3,33 @@ class ArbiterContent {
     btnIsSignedIn = "isSignedIn";
     tbID = "ctl00_ContentHolder_pgeGameScheduleEdit_conGameScheduleEdit_dgGames";
 
+    
+    _isSignedIn = false;
+    get isSignedIn() {
+        return this._isSignedIn;
+    }
+
     /**
      * Adds column to table. Sends info about games to background listener.
      */
-    addSyncColumn(isSignedIn, authtoken) {
+    async addSyncColumn() {
         let tbID = this.tbID;
-        let tblRows = document.getElementById(tbID).children[0].children;
+        let tblRows = /** @type {HTMLCollectionOf<HTMLTableRowElement>} */
+            (document.getElementById(tbID).children[0].children);
         let totalPay = 0;
-        let txtIsSignedIn;
+
+        /** @type {ARBGame[]} */
         let stgGames = [];
-        let isAccepted;
+
+
+
+        this._isSignedIn = await AuthService.IsSignedIn();
+
         for (let row of tblRows) {
             row.insertCell(2);
             if (row.className.toLowerCase().includes("headers")) {
-                row.cells[0].style = "white-space:nowrap;";
-                row.cells[1].style = "white-space:nowrap;";
-                txtIsSignedIn = document.createElement("p");
-                if (isSignedIn) {
+                let txtIsSignedIn = document.createElement("p");
+                if (this.isSignedIn) {
                     txtIsSignedIn.innerHTML = "Sync";
                     txtIsSignedIn.title = "Click to refresh checkboxes";
                 } else {
@@ -27,14 +37,15 @@ class ArbiterContent {
                     txtIsSignedIn.title = "Sign In";
                 }
                 txtIsSignedIn.id = this.btnIsSignedIn;
-                txtIsSignedIn.style = "white-space: nowrap; color: White; cursor: pointer;";
-                txtIsSignedIn.onclick = () => {
-                    chrome.runtime.sendMessage({ method: 'auth.interactive' }, (token) => {
-                        //callback will have authtoken in response parameter
+                txtIsSignedIn.onclick = async () => {
+                    try {
+                        const token = await AuthService.AuthInteractive();
                         if (token) {
-                            this.sync(false, isSignedIn);
+                            this.sync(false, this.isSignedIn);
                         }
-                    });
+                    } catch (err) {
+                        console.error(err);
+                    }
                 };
                 row.cells[2].append(txtIsSignedIn);
             }
@@ -42,16 +53,19 @@ class ArbiterContent {
                 //create sync checkbox
                 let cb = document.createElement("input");
                 cb.type = "checkbox";
+
+                /** @type {Boolean} */
+                let isAccepted;
                 if (row.cells.length >= 11) {
                     isAccepted = row.cells[10].textContent.search("Accepted") > 0;
                 }
 
-                if (!isSignedIn || !isAccepted) {
+                if (!this.isSignedIn || !isAccepted) {
                     cb.disabled = true;
                     console.trace('cb.disabled = true');
                 }
                 row.cells[2].append(cb);
-                let gameObj = this.getGameObj(cb, row);
+                let gameObj = new ARBGame(cb, row);
                 stgGames.push(gameObj);
                 totalPay += Number(gameObj.pay.replace(/[^0-9.-]+/g, ""));
             }
@@ -62,8 +76,11 @@ class ArbiterContent {
 
     };
 
-    cbClicked(content) {
-        ArbiterContent.onCbClicked(this, content);
+    /**
+     * @param {ARBGame} game
+     */
+    cbClicked(game) {
+        ArbiterContent.onCbClicked(game, this);
     }
 
 
@@ -82,7 +99,7 @@ class ArbiterContent {
                 gameObj.checkbox.checked = false;
                 alert(`error occurred; calendar not updated \n${err}`);
             };
-            addGame(gameObj).then((isSuccess) => {
+            CalendarService.addGame(gameObj).then((isSuccess) => {
 
                 if (!isSuccess) {
                     onError(null);
@@ -94,7 +111,7 @@ class ArbiterContent {
             });
         } else {
             //remove game to calendar
-            sendMessageToBackground('calendar.removeGame', { game: gameObj }).then((isSuccess) => {
+            CalendarService.removeGame(gameObj).then((isSuccess) => {
                 if (!isSuccess) {
                     gameObj.checkbox.checked = true;
                     alert("error occurred; calendar not updated");
@@ -108,16 +125,10 @@ class ArbiterContent {
 
 
 
-
-    getGameObj(cb, row) {
-        return new ARBGame(cb, row);
-    };
-
-
-
     async sync(addOnClick = false, prompAddGames = false) {
         let tbID = this.tbID;
-        let tblRows = document.getElementById(tbID).children[0].children;
+        let tblRows = /** @type {HTMLCollectionOf<HTMLTableRowElement>} */
+            (document.getElementById(tbID).children[0].children);
 
 
 
@@ -127,20 +138,20 @@ class ArbiterContent {
         let arbGames = [];
         for (let row of tblRows) {
             if (row.className.toLowerCase().includes("items")) {
-                /** @type {HTMLInputElement} */
-                let cb = row.cells[2].children[0];
+
+                let cb = /** @type {HTMLInputElement} */ (row.cells[2].children[0]);
                 cb.disabled = true;
                 let game = new ARBGame(cb, row);
                 arbGames.push(game);
             }
         }
 
-        /** @type {CalEvent[]} */
+        /** @type {CalendarEvent[]} */
         let events;
         try {
             let minDate = arbGames[0].date;
             let maxDate = arbGames[arbGames.length - 1].date;
-            events = await getEvents(minDate, maxDate);
+            events = await CalendarService.getEvents(minDate, maxDate);
         } catch (err) {
             alert(`unable to fetch events from calendar. Try refreshing the page.\n ${err}`);
             document.getElementById(this.btnIsSignedIn).innerHTML = "Refresh";
@@ -167,7 +178,7 @@ class ArbiterContent {
 
                 if (isCanceled) {
                     //remove game to calendar
-                    sendMessageToBackground('calendar.removeGame', { game: gameObj }, (isSuccess) => {
+                    CalendarService.removeGame(gameObj).then((isSuccess) => {
                         if (!isSuccess) {
                             gameObj.checkbox.checked = true;
                             alert("error occurred; calendar not updated");
@@ -183,7 +194,7 @@ class ArbiterContent {
                 uncheckedGames.push(gameObj);
             }
             if (addOnClick) {
-                cb.addEventListener('click', this.cbClicked.bind(gameObj, this));
+                cb.addEventListener('click', this.cbClicked.bind(this, gameObj));
             }
             cb.disabled = false;
         }
@@ -193,7 +204,7 @@ class ArbiterContent {
             let result = window.confirm(`add ${gamesToAdd.length} unchecked games?`);
             if (result) {
                 for (let gameObj of gamesToAdd) {
-                    await addGame(gameObj);
+                    await CalendarService.addGame(gameObj);
                 }
                 await this.sync();
             }

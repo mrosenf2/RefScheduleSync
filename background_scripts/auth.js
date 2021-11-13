@@ -3,33 +3,39 @@ class BGAuthService {
     /** @type {string} */
     static AuthToken;
 
+    static async ClearAllCachedAuthTokens() {
+        return await new Promise((resolve, reject) => {
+            chrome.identity.clearAllCachedAuthTokens(() => {
+                console.log('clearAllCachedAuthTokens');
+                resolve(true);
+            });
+
+        });
+    }
+
     /**
      * determines if user is signed in or not based on if auth token is produced
      * @param {Boolean} isInteractive whether or not authentication UI is displayed to the user
      * @returns {Promise<string>} authentication token
      */
-    static GetAuthToken(isInteractive = false) {
-        return new Promise((resolve, reject) => {
-            if (BGAuthService.AuthToken) {
-                resolve(BGAuthService.AuthToken);
-            } else {
-                // @ts-ignore
-                chrome.identity.getAuthToken({ 'interactive': isInteractive }, (authToken) => {
-                    if (authToken) {
-                        resolve(authToken);
-                    } else {
-                        // @ts-ignore
-                        console.log(`Warning: Error authorizing for Chrome browser, attemping auth for Edge browser: ${chrome.runtime.lastError.message}`);
-                        BGAuthService.Authorize_MSEdge(isInteractive).then((token) => {
-                            resolve(token);
-                        }).catch(() => {
-                            // @ts-ignore
-                            reject(new Error('Authorization: ' + chrome.runtime.lastError?.message));
-                        });
-                    };
-                });
-            }
-
+    static async GetAuthToken(isInteractive = false) {
+        console.trace(`getting AuthToken (interactive:${isInteractive})`);
+        return await new Promise((resolve, reject) => {
+            chrome.identity.getAuthToken({ 'interactive': isInteractive, }, (authToken, scopes) => {
+                if (authToken) {
+                    if (isInteractive) {
+                        LocalStorageService.SetValue('IsAuthenticated', true);
+                    }
+                    resolve(authToken);
+                } else {
+                    console.log(`Warning: Error authorizing for Chrome browser, attemping auth for Edge browser: ${chrome.runtime.lastError.message}`);
+                    BGAuthService.Authorize_MSEdge(isInteractive).then((token) => {
+                        resolve(token);
+                    }).catch(() => {
+                        reject('Authorization: ' + chrome.runtime.lastError?.message);
+                    });
+                };
+            });
         });
     }
 

@@ -1,7 +1,7 @@
 /**
  * This callback is displayed as a global member.
  * @callback addListenerCallback
- * @param {string} newValue
+ * @param {any} newValue
  */
 
 class LocalStorageService {
@@ -21,7 +21,7 @@ class LocalStorageService {
             chrome.storage.local.set({ [key]: value }, function () {
                 // Pass any observed errors down the promise chain.
                 if (chrome.runtime.lastError) {
-                    return reject(chrome.runtime.lastError);
+                    reject(chrome.runtime.lastError);
                 }
                 resolve();
             });
@@ -54,8 +54,9 @@ class LocalStorageService {
      * @param {addListenerCallback} callback
      */
     static addListener(key, callback) {
-        const newLocal = function (/** @type {{ [s: string]: {oldValue: string, newValue: string} }} */ changes, /** @type {String} */ namespace) {
-            for (let [k, { oldValue, newValue }] of Object.entries(changes)) {
+        chrome.storage.onChanged.addListener((changes, namespace) => {
+            for (let [k, v] of Object.entries(changes)) {
+                let newValue = v.newValue;
                 // console.log(
                 //     `Storage key "${k}" in namespace "${namespace}" changed.`,
                 //     `Old value was "${oldValue}", new value is "${newValue}".`
@@ -64,7 +65,6 @@ class LocalStorageService {
                     callback(newValue);
                 }
             }
-        };
-        chrome.storage.onChanged.addListener(newLocal);
+        });
     }
 }

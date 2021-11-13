@@ -17,13 +17,15 @@ let content = {
             console.log(newValue);
         })
 
+        LocalStorageService.addListener('IsAuthenticated', (newValue) => {
+            console.log(newValue);
+        })
+
         try {
-            const token = await AuthService.AuthSilent();
-            scheduler.addSyncColumn(true);
+            await scheduler.addSyncColumn();
             scheduler.sync(true);
         } catch (err) {
-            console.log(err);
-            scheduler.addSyncColumn(false);
+            console.error(err);
         }
     }
 };

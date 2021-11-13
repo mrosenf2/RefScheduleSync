@@ -3,39 +3,53 @@
 class HorizonContent {
     tbID = "schedResults";
     btnIsSignedIn = "isSignedIn";
+    /** @type {HTMLParagraphElement} */
+    txtIsSignedIn;
 
     titleText = 'Official Game Schedule';
 
-    /** 
-     * @param {HTMLInputElement} cb 
-     * @param {HTMLTableRowElement} row 
-     */
-    getGameObj(cb, row) {
-        let gameObj = new HWRGame(cb, row);
-        return gameObj;
+    _isSignedIn = false;
+    get isSignedIn() {
+        return this._isSignedIn;
     }
 
     isGameSchedulePage() {
-        let titleEl = [].slice.call(document.getElementsByTagName('i'))
-            .filter((/** @type {{ textContent: string | string[]; }} */ e) => e.textContent.includes(this.titleText));
+        let titleEl = [...document.getElementsByTagName('i')]
+            .filter((e) => e.textContent.includes(this.titleText));
         return titleEl.length > 0;
     }
+
+    txtIsSignedIn_onclick = async (/** @type {Event} */ evt) => {
+        try {
+            const p = /** @type {HTMLParagraphElement} */ (evt.target);
+            const isSignedIn = !p.title.toLowerCase().includes("sign in");
+            if (isSignedIn) {
+                this.sync(false, true);
+            } else {
+                await AuthService.AuthInteractive();
+                this.sync(false, false);
+            }
+        } catch (err) {
+            console.error(err);
+        }
+    };
 
 
     /**
     * Adds column to table. Sends info about games to background listener.
-    * @param {boolean} isSignedIn
     */
-    addSyncColumn(isSignedIn) {
+    async addSyncColumn() {
         if (!this.isGameSchedulePage()) {
             console.log(`Expected title ${this.titleText} not found`);
             return;
         }
 
+        this._isSignedIn = await AuthService.IsSignedIn();
+
         let tblRows = /** @type {HTMLCollectionOf<HTMLTableRowElement>} */
             (document.getElementById(this.tbID).children[0].children);
 
-        let txtIsSignedIn;
+
         /** @type {HWRGame[]} */
         let stgGames = [];
         /** @type {boolean} */
@@ -44,37 +58,21 @@ class HorizonContent {
         for (let row of tblRows) {
             if (row.cells) {
                 if (!row.id.toLowerCase().includes("assignment")) {
-                    /** @type {CSSStyleDeclaration} */
-                    let s;
 
-                    row.cells[0].style.whiteSpace = 'nowrap';
-                    row.cells[1].style.whiteSpace = 'nowrap';
-
-                    txtIsSignedIn = document.createElement("p");
-                    if (isSignedIn) {
-                        txtIsSignedIn.innerHTML = "Sync";
-                        txtIsSignedIn.title = "Click to refresh checkboxes";
+                    this.txtIsSignedIn = document.createElement("p");
+                    this.txtIsSignedIn.id = this.btnIsSignedIn;
+                    if (this.isSignedIn) {
+                        this.txtIsSignedIn.innerHTML = "Sync";
+                        this.txtIsSignedIn.title = "Click to refresh checkboxes";
                     } else {
-                        txtIsSignedIn.innerHTML = "Sign in to Sync";
-                        txtIsSignedIn.title = "Sign In";
+                        this.txtIsSignedIn.innerHTML = "Sign in to Sync";
+                        this.txtIsSignedIn.title = "Sign In";
                     }
-                    txtIsSignedIn.id = this.btnIsSignedIn;
-                    txtIsSignedIn.style.whiteSpace = 'nowrap';
-                    txtIsSignedIn.style.color = 'White';
-                    txtIsSignedIn.style.fontStyle = 'bold';
-                    txtIsSignedIn.style.cursor = 'pointer';
 
-                    txtIsSignedIn.onclick = async () => {
-                        try {
-                            const token = await AuthService.AuthInteractive();
-                            if (token) {
-                                this.sync(false, isSignedIn);
-                            }
-                        } catch (err) {
-                            console.error(err);
-                        }
-                    };
-                    row.cells[0].append(txtIsSignedIn);
+
+                    this.txtIsSignedIn.onclick = this.txtIsSignedIn_onclick;
+
+                    row.cells[0].replaceChildren(this.txtIsSignedIn);
                 }
                 else {
                     //create sync checkbox
@@ -84,12 +82,12 @@ class HorizonContent {
                         isAccepted = true;
                     }
 
-                    if (!isSignedIn || !isAccepted) {
+                    if (!this.isSignedIn || !isAccepted) {
                         cb.disabled = true;
                         console.trace('cb.disabled = true');
                     }
                     row.cells[0].replaceChildren(cb);
-                    let gameObj = this.getGameObj(cb, row);
+                    let gameObj = new HWRGame(cb, row);
 
                     stgGames.push(gameObj);
                 }
@@ -99,7 +97,7 @@ class HorizonContent {
             const g1 = stgGames[i];
             const g2 = stgGames[i + 1];
             if (checkTimeBetweenGames(g1, g2)) {
-                g2.row.style.background = "orange";
+                g2.row.classList.add("warnTimeBetweenGames");
                 console.log(g2.row);
             }
 
@@ -144,36 +142,36 @@ class HorizonContent {
      * @param {HWRGame} gameObj 
      * @param {HorizonContent} horizonContent 
      */
-    static onCBClicked(gameObj, horizonContent) {
+    static async onCBClicked(gameObj, horizonContent) {
         gameObj.calId = gameObj.checkbox.title; //get new calID because it doesnt update from when event listener is first bound
         if (gameObj.checkbox.checked) {
             //add game to calendar
             gameObj.checkbox.disabled = true;
-            let onError = (/** @type {any} */ err) => {
+            let onError = (err) => {
                 gameObj.checkbox.checked = false;
                 console.log(`error occurred; calendar not updated \n${err}`);
                 alert(`error occurred; calendar not updated \n${err}`);
             };
-            addGame(gameObj).then((isSuccess) => {
-
-                if (!isSuccess) {
+            try {
+                let resp = await CalendarService.addGame(gameObj);
+                if (!resp.ok) {
                     onError(null);
                 }
-                horizonContent.sync();
                 gameObj.checkbox.disabled = false;
-            }).catch(err => {
+                gameObj.checkbox.checked = true;
+                gameObj.checkbox.title = resp.data.id;
+            } catch (err) {
                 onError(err);
-            });
+            }
         } else {
             //remove game to calendar
-            sendMessageToBackground('calendar.removeGame', { game: gameObj }).then((isSuccess) => {
-                if (!isSuccess) {
-                    gameObj.checkbox.checked = true;
-                    alert("error occurred; calendar not updated");
-                }
-                horizonContent.sync();
-                gameObj.checkbox.disabled = false;
-            });
+            let isSuccess = await CalendarService.removeGame(gameObj);
+            if (!isSuccess) {
+                gameObj.checkbox.checked = true;
+                alert("error occurred; calendar not updated");
+            }
+            horizonContent.sync();
+            gameObj.checkbox.disabled = false;
         }
     }
 
@@ -182,30 +180,30 @@ class HorizonContent {
      * 
      * @param {HWRGame} gameToUpdate 
      */
-    updateDesc(gameToUpdate) {
+    async updateDesc(gameToUpdate) {
         console.log('updating desc of', { gameToUpdate });
-        sendMessageToBackground('calendar.removeGame', { game: gameToUpdate }).then((isSuccess) => {
-            if (!isSuccess) {
-                gameToUpdate.checkbox.checked = true;
-                alert("error occurred; calendar not updated");
+        const isUpdateSuccess = CalendarService.removeGame(gameToUpdate);
+        if (!isUpdateSuccess) {
+            gameToUpdate.checkbox.checked = true;
+            alert("error occurred; calendar not updated");
+        } else {
+            const isAddSuccess = await CalendarService.addGame(gameToUpdate);
+            if (!isAddSuccess.ok) {
+                alert(`ERROR UPDATING DESCRIPTION: \n${gameToUpdate.level} - ${gameToUpdate.location} (${gameToUpdate.date})`);
             } else {
-                addGame(gameToUpdate).then((isSuccess) => {
-
-                    if (!isSuccess) {
-                        alert(`ERROR UPDATING DESCRIPTION: \n${gameToUpdate.level} - ${gameToUpdate.location} (${gameToUpdate.date})`);
-                    } else {
-                        alert(`UPDATING DESCRIPTION: \n${gameToUpdate.level} - ${gameToUpdate.location} (${gameToUpdate.date})`);
-                        console.log('update success');
-                    }
-                });
+                alert(`UPDATING DESCRIPTION: \n${gameToUpdate.level} - ${gameToUpdate.location} (${gameToUpdate.date})`);
+                console.log('update success');
             }
-        });
+        }
     }
 
     async sync(addOnClick = false, isInteractive = false) {
+
+        if (!this.isSignedIn) {
+            return;
+        }
+
         let tbID = this.tbID;
-
-
         let tblRows = /** @type {HTMLCollectionOf<HTMLTableRowElement>} */
             (document.getElementById(tbID).children[0].children);
 
@@ -221,7 +219,7 @@ class HorizonContent {
             }
         }
 
-        /** @type {CalEvent[]} */
+        /** @type {CalendarEvent[]} */
         let events;
         if (hwrGames.length == 0) {
             return;
@@ -229,19 +227,26 @@ class HorizonContent {
         try {
             let minDate = hwrGames[0].date;
             let maxDate = hwrGames[hwrGames.length - 1].date;
-            events = await getEvents(minDate, maxDate);
+            events = await CalendarService.getEvents(minDate, maxDate);
         } catch (err) {
-            const msg = `unable to fetch events from calendar. Try refreshing the page.\n ${err}`;
+            const msg = `unable to fetch events from calendar. Try refreshing the page.\n ${err.message}`;
             alert(msg);
-            console.log(msg);
-            document.getElementById(this.btnIsSignedIn).innerHTML = "Refresh";
+            console.log(msg, err);
+            this.txtIsSignedIn.innerHTML = "Refresh";
             for (let gameObj of hwrGames) {
                 gameObj.checkbox.disabled = true;
             }
             return;
         }
 
-        let doesNameExist = (/** @type { HWRGame } */ game, /** @type {string} */ strName) => game.officials.find(s => s.includes(strName)) != undefined;
+        /**
+         * @param {HWRGame} game 
+         * @param {string} strName 
+         * @returns {boolean}
+         */
+        function doesNameExist(game, strName) {
+            return game.officials.find(s => s.includes(strName)) != undefined;
+        }
         // if my name does not appear on the list of officials, leave...        
         if (hwrGames.find(g => !doesNameExist(g, 'Rosenfeld'))) {
             console.log('Sync cancelled because you are viewing a public list');
@@ -268,13 +273,12 @@ class HorizonContent {
                     console.log(`multipleMatches.length: ${duplicateMatches.length}`);
                     let dupGame = duplicateMatches.pop();
                     gameObj.calId = dupGame.id;
-                    sendMessageToBackground('calendar.removeGame', { game: gameObj }).then((isSuccess) => {
-                        if (!isSuccess) {
-                            alert("error occurred; calendar not updated");
-                        } else {
-                            console.log('removed duplicate');
-                        }
-                    });
+                    const isSuccess = await CalendarService.removeGame(gameObj);
+                    if (!isSuccess) {
+                        alert("error occurred removing duplicate; calendar not updated");
+                    } else {
+                        console.log('removed duplicate');
+                    }
                 }
 
                 gameObj.calId = match.id;
@@ -303,7 +307,7 @@ class HorizonContent {
                 let result = window.confirm(`add ${gamesToAdd.length} unchecked games?`);
                 if (result) {
                     for (let gameObj of gamesToAdd) {
-                        await addGame(gameObj);
+                        await CalendarService.addGame(gameObj);
                     }
                     await this.sync();
                 }
