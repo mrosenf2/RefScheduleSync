@@ -3,12 +3,6 @@ class ArbiterContent {
     btnIsSignedIn = "isSignedIn";
     tbID = "ctl00_ContentHolder_pgeGameScheduleEdit_conGameScheduleEdit_dgGames";
 
-    
-    _isSignedIn = false;
-    get isSignedIn() {
-        return this._isSignedIn;
-    }
-
     /**
      * Adds column to table. Sends info about games to background listener.
      */
@@ -23,31 +17,17 @@ class ArbiterContent {
 
 
 
-        this._isSignedIn = await AuthService.IsSignedIn();
+        const isSignedIn = await LocalStorageService.GetValue('IsSignedIn');
 
         for (let row of tblRows) {
             row.insertCell(2);
             if (row.className.toLowerCase().includes("headers")) {
-                let txtIsSignedIn = document.createElement("p");
-                if (this.isSignedIn) {
-                    txtIsSignedIn.innerHTML = "Sync";
-                    txtIsSignedIn.title = "Click to refresh checkboxes";
-                } else {
-                    txtIsSignedIn.innerHTML = "Sign in to Sync";
-                    txtIsSignedIn.title = "Sign In";
-                }
+                let txtIsSignedIn = Common.CreateElementSignInSync(isSignedIn);
                 txtIsSignedIn.id = this.btnIsSignedIn;
-                txtIsSignedIn.onclick = async () => {
-                    try {
-                        const token = await AuthService.AuthInteractive();
-                        if (token) {
-                            this.sync(false, this.isSignedIn);
-                        }
-                    } catch (err) {
-                        console.error(err);
-                    }
+                txtIsSignedIn.onclick = () => {
+                    Common.SignInSyncHandler(this.sync.bind(this))
                 };
-                row.cells[2].append(txtIsSignedIn);
+                row.cells[2].replaceChildren(txtIsSignedIn);
             }
             if (row.className.toLowerCase().includes("items")) {
                 //create sync checkbox
@@ -60,11 +40,11 @@ class ArbiterContent {
                     isAccepted = row.cells[10].textContent.search("Accepted") > 0;
                 }
 
-                if (!this.isSignedIn || !isAccepted) {
+                if (!isSignedIn || !isAccepted) {
                     cb.disabled = true;
                     console.trace('cb.disabled = true');
                 }
-                row.cells[2].append(cb);
+                row.cells[2].replaceChildren(cb);
                 let gameObj = new ARBGame(cb, row);
                 stgGames.push(gameObj);
                 totalPay += Number(gameObj.pay.replace(/[^0-9.-]+/g, ""));

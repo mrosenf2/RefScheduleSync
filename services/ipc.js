@@ -13,10 +13,12 @@ const sendMessageToBackground = (method, params = null) => {
             }
         });
     });
-}
+};
 
 class CalendarService {
     /**
+     * @param {string} minDate
+     * @param {string} maxDate
      * @returns {Promise<CalendarEvent[]>}
      */
     static getEvents(minDate, maxDate) {
@@ -59,18 +61,19 @@ class AuthService {
         return sendMessageToBackground('auth.clearAllCachedAuthTokens');
     }
 
+    static SwitchLoggedInAccount() {
+        return sendMessageToBackground('auth.switchAccount');
+    }
+
     static async IsSignedIn() {
-        await AuthService.ClearAllCachedAuthTokens();
+        let isAuth = false;
         try {
+            await AuthService.ClearAllCachedAuthTokens();
             const token = await AuthService.AuthSilent();
-            if (token) {
-                LocalStorageService.SetValue('IsAuthenticated', true);
-                return true;
-            }
+            isAuth = true;
         } catch (error) {
             console.log(error);
         }
-        LocalStorageService.SetValue('IsAuthenticated', false);
-        return false;
+        return isAuth;
     }
 }

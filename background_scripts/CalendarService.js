@@ -7,7 +7,6 @@ class BGCalendarService {
          */
         this.calID = "1hjk892r88cncfm8ctgp07r00g@group.calendar.google.com";
         this.isInit = false;
-        this.authToken = '';
         this.APIURL_get_calendars = 'https://www.googleapis.com/calendar/v3/users/me/calendarList';
         this.APIURL_get_events = 'https://www.googleapis.com/calendar/v3/calendars/{calendarId}/events?maxResults=2000&timeMin={timeMin}&timeMax={timeMax}';
         this.APIURL_add_events = 'https://www.googleapis.com/calendar/v3/calendars/{calendarId}/events';
@@ -32,25 +31,13 @@ class BGCalendarService {
      */
     async init() {
 
-        LocalStorageService.addListener('IsAuthenticated', async (newValue) => {
+        LocalStorageService.addListener('IsSignedIn', async (newValue) => {
             console.log(`Auth changed: ${newValue}`);
-            if (newValue){
-                this.authToken = await BGAuthService.GetAuthToken();
-            }
         })
 
-        try {
-            let token = await BGAuthService.GetAuthToken();
-            this.isInit = true;
-            this.authToken = token;
-            this.APIURL_add_events = this.APIURL_add_events.replace('{calendarId}', encodeURIComponent(this.calID));
-            this.APIURL_del_event = this.APIURL_del_event.replace('{calendarId}', encodeURIComponent(this.calID));
-
-        } catch (err) {
-            console.log(`could not obtain token: ${err}`);
-            this.authToken = null;
-            this.isInit = true;
-        }
+        this.isInit = true;
+        this.APIURL_add_events = this.APIURL_add_events.replace('{calendarId}', encodeURIComponent(this.calID));
+        this.APIURL_del_event = this.APIURL_del_event.replace('{calendarId}', encodeURIComponent(this.calID));
     };
 
     /**
@@ -90,9 +77,10 @@ class BGCalendarService {
      * @param {RequestInfo} url
      */
     async Get(url) {
+        let token = await BGAuthService.GetAuthToken();
         let resp = await fetch(url, {
             method: 'get',
-            headers: { 'Authorization': 'Bearer ' + this.authToken },
+            headers: { 'Authorization': 'Bearer ' + token },
         });
         let data = await resp.json();
         return data;
@@ -112,13 +100,14 @@ class BGCalendarService {
 
     async Post(url, data) {
         try {
+            let token = await BGAuthService.GetAuthToken();
             const response = await fetch(url, {
                 method: 'POST', // *GET, POST, PUT, DELETE, etc.
                 // mode: 'cors', // no-cors, *cors, same-origin
                 cache: 'no-cache', // *default, no-cache, reload, force-cache, only-if-cached
                 credentials: 'same-origin', // include, *same-origin, omit
                 headers: {
-                    'Authorization': 'Bearer ' + this.authToken,
+                    'Authorization': 'Bearer ' + token,
                     'Content-Type': 'application/json'
                 },
                 redirect: 'follow', // manual, *follow, error
@@ -139,13 +128,14 @@ class BGCalendarService {
      */
     async Delete(url) {
         try {
+            let token = await BGAuthService.GetAuthToken();
             const response = await fetch(url, {
                 method: 'DELETE', // *GET, POST, PUT, DELETE, etc.
                 // mode: 'cors', // no-cors, *cors, same-origin
                 cache: 'no-cache', // *default, no-cache, reload, force-cache, only-if-cached
                 credentials: 'same-origin', // include, *same-origin, omit
                 headers: {
-                    'Authorization': 'Bearer ' + this.authToken
+                    'Authorization': 'Bearer ' + token
                 }
             });
             return { ok: response.ok };

@@ -1,13 +1,12 @@
 class SessionStorage {
 
-    /** Is user signed into google account
+    /** Is user signed in
      * @type {boolean} */
-    IsAuthenticated;
-
+    IsSignedIn;
 
     /** Horizon or Arbiter 
-     * @type {string} */
-    location;
+     * @type {"Horizon" | "Arbiter"} */
+    SchedulingService;
 
     /** CalID of selected calendar
      * @type {string} */

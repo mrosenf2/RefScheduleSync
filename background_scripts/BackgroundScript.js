@@ -12,6 +12,7 @@
  * | "auth.interactive" 
  * | "auth.silent" 
  * | "auth.clearAllCachedAuthTokens"
+ * | "auth.switchAccount"
  * | "calendar.getCalendars"
  * | "calendar.getEvents"
  * | "calendar.addGame"
@@ -39,6 +40,9 @@ let background = {
           break;
         case 'auth.clearAllCachedAuthTokens':
           serviceCall = BGAuthService.ClearAllCachedAuthTokens();
+          break;
+        case 'auth.switchAccount':
+          serviceCall = BGAuthService.AuthorizeUsingRedirect(true);
           break;
 
         case 'calendar.getCalendars':

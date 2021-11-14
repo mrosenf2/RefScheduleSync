@@ -8,32 +8,11 @@ class HorizonContent {
 
     titleText = 'Official Game Schedule';
 
-    _isSignedIn = false;
-    get isSignedIn() {
-        return this._isSignedIn;
-    }
-
     isGameSchedulePage() {
         let titleEl = [...document.getElementsByTagName('i')]
             .filter((e) => e.textContent.includes(this.titleText));
         return titleEl.length > 0;
     }
-
-    txtIsSignedIn_onclick = async (/** @type {Event} */ evt) => {
-        try {
-            const p = /** @type {HTMLParagraphElement} */ (evt.target);
-            const isSignedIn = !p.title.toLowerCase().includes("sign in");
-            if (isSignedIn) {
-                this.sync(false, true);
-            } else {
-                await AuthService.AuthInteractive();
-                this.sync(false, false);
-            }
-        } catch (err) {
-            console.error(err);
-        }
-    };
-
 
     /**
     * Adds column to table. Sends info about games to background listener.
@@ -44,7 +23,7 @@ class HorizonContent {
             return;
         }
 
-        this._isSignedIn = await AuthService.IsSignedIn();
+        const isSignedIn = await LocalStorageService.GetValue('IsSignedIn');
 
         let tblRows = /** @type {HTMLCollectionOf<HTMLTableRowElement>} */
             (document.getElementById(this.tbID).children[0].children);
@@ -59,18 +38,11 @@ class HorizonContent {
             if (row.cells) {
                 if (!row.id.toLowerCase().includes("assignment")) {
 
-                    this.txtIsSignedIn = document.createElement("p");
+                    this.txtIsSignedIn = Common.CreateElementSignInSync(isSignedIn);
                     this.txtIsSignedIn.id = this.btnIsSignedIn;
-                    if (this.isSignedIn) {
-                        this.txtIsSignedIn.innerHTML = "Sync";
-                        this.txtIsSignedIn.title = "Click to refresh checkboxes";
-                    } else {
-                        this.txtIsSignedIn.innerHTML = "Sign in to Sync";
-                        this.txtIsSignedIn.title = "Sign In";
-                    }
-
-
-                    this.txtIsSignedIn.onclick = this.txtIsSignedIn_onclick;
+                    this.txtIsSignedIn.onclick = () => {
+                        Common.SignInSyncHandler(this.sync.bind(this));
+                    };
 
                     row.cells[0].replaceChildren(this.txtIsSignedIn);
                 }
@@ -82,9 +54,9 @@ class HorizonContent {
                         isAccepted = true;
                     }
 
-                    if (!this.isSignedIn || !isAccepted) {
+                    if (!isSignedIn || !isAccepted) {
                         cb.disabled = true;
-                        console.trace('cb.disabled = true');
+                        console.log('cb.disabled = true', {isSignedIn, isAccepted});
                     }
                     row.cells[0].replaceChildren(cb);
                     let gameObj = new HWRGame(cb, row);
@@ -199,7 +171,8 @@ class HorizonContent {
 
     async sync(addOnClick = false, isInteractive = false) {
 
-        if (!this.isSignedIn) {
+        const isSignedIn = await LocalStorageService.GetValue('IsSignedIn');
+        if (!isSignedIn) {
             return;
         }
 

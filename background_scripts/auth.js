@@ -24,12 +24,12 @@ class BGAuthService {
             chrome.identity.getAuthToken({ 'interactive': isInteractive, }, (authToken, scopes) => {
                 if (authToken) {
                     if (isInteractive) {
-                        LocalStorageService.SetValue('IsAuthenticated', true);
+                        LocalStorageService.SetValue('IsSignedIn', true);
                     }
                     resolve(authToken);
                 } else {
                     console.log(`Warning: Error authorizing for Chrome browser, attemping auth for Edge browser: ${chrome.runtime.lastError.message}`);
-                    BGAuthService.Authorize_MSEdge(isInteractive).then((token) => {
+                    BGAuthService.AuthorizeUsingRedirect(isInteractive).then((token) => {
                         resolve(token);
                     }).catch(() => {
                         reject('Authorization: ' + chrome.runtime.lastError?.message);
@@ -44,8 +44,7 @@ class BGAuthService {
      * @param {Boolean} isInteractive whether or not authentication UI is displayed to the user
      * @returns {Promise<string>} authentication token
      */
-    static Authorize_MSEdge(isInteractive = true) {
-        // @ts-ignore
+    static AuthorizeUsingRedirect(isInteractive = true) {
         const redirectURL = chrome.identity.getRedirectURL();
         const clientID = "439216554338-e0hklsngi29ojhg0nc6snfur1nups7ld.apps.googleusercontent.com";
         const scopes = ["https://www.googleapis.com/auth/calendar"];
@@ -54,18 +53,20 @@ class BGAuthService {
         authURL += `&response_type=token`;
         authURL += `&redirect_uri=${encodeURIComponent(redirectURL)}`;
         authURL += `&scope=${encodeURIComponent(scopes.join(' '))}`;
+        // authURL += `&prompt=select_account`;
         console.log(authURL);
         return new Promise((resolve, reject) => {
-            // @ts-ignore
             chrome.identity.launchWebAuthFlow({
                 interactive: isInteractive,
                 url: authURL
             }, (resp) => {
                 if (resp) {
+                    if (isInteractive) {
+                        LocalStorageService.SetValue('IsSignedIn', true);
+                    }
                     resolve((new URLSearchParams(resp.split("#")[1])).get("access_token"));
                 } else (
-                    // @ts-ignore
-                    reject(new Error('getAuthToken: ' + chrome.runtime.lastError.message))
+                    reject('getAuthToken: ' + chrome.runtime.lastError.message)
                 );
             });
 
