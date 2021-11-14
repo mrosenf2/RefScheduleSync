@@ -11,4 +11,12 @@ class SessionStorage {
     /** CalID of selected calendar
      * @type {string} */
     SelectedCalID;
+
+    /** Message to display in extension popup
+     * @type {string} */
+    StatusMessage;
+
+    /** Sync Status
+     * @type {string} */
+    SyncStatus;
 }

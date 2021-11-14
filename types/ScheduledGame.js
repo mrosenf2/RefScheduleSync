@@ -1,7 +1,6 @@
 class ScheduledGame {
 
-    constructor(cb, row) {
-        this.checkbox = cb;
+    constructor(row) {
         this.row = row;
     }
 
@@ -65,6 +64,10 @@ class ScheduledGame {
     // TODO:
     /** @type {Number} */
     durationInMins;
+
+    async init() {
+
+    }
 
     getEventDescription() {
         return JSON.stringify({

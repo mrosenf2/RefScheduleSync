@@ -31,9 +31,9 @@ class ARBGame extends ScheduledGame {
 
     /** @returns {Promise<string>} */
     getLocation() {
-        let _this = this;
+        let locationURL = this.locationURL;
         return new Promise(function (resolve, reject) {
-            $.ajax(_this.locationURL, {
+            $.ajax(locationURL, {
                 success: (data) => {
                     let addrID = '#ctl00_ContentHolder_pgeRecordView_conRecordView_lnkAddress';
                     let table = $(addrID, data)[0];
@@ -48,6 +48,9 @@ class ARBGame extends ScheduledGame {
         });
     }
 
+    /**
+     * @override
+     */
     async init() {
         try {
             super.officials = await this.getOfficials();
@@ -61,14 +64,15 @@ class ARBGame extends ScheduledGame {
 
     /**
      * 
-     * @param {HTMLInputElement} cb 
      * @param {HTMLTableRowElement} row
      */
-    constructor(cb, row) {
-        super(cb, row);
+    constructor(row) {
+        super(row);
+
+        let cb = /** @type {HTMLInputElement} */ (row.cells[2].children[0]);
+        super.checkbox = cb;
 
         const GAME_ID = 0, DATE = 4, LEVEL = 5, LOCATION = 6, HOME_TEAM = 7, AWAY_TEAM = 8, PAY = 9;
-        super.checkbox = cb;
         super.row = row;
         super.gameID = row.cells[GAME_ID].innerText;
         super.date = moment(row.cells[DATE].innerText, "MM-DD-YYYY h:m a").format();

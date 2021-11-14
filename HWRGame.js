@@ -1,12 +1,14 @@
 class HWRGame extends ScheduledGame {
     
     /**
-     * 
-     * @param {HTMLInputElement} cb 
      * @param {HTMLTableRowElement} row
      */
-    constructor(cb, row) {
-        super(cb, row);
+    constructor(row) {
+        super(row);
+
+        let cb = /** @type {HTMLInputElement} */ (row.cells[0].children[0]);
+        super.checkbox = cb;
+
         const GAME_ID = 0, DATE = 1, TIME = 2, LEVEL = 3, LOCATION = 6, HOME_TEAM = 4, AWAY_TEAM = 5, PAY = 7, OFFICIALS = 9, GAME_DETAILS = 10;
         let regex = /title:'(?<name>.*)',type:'',text:'(?<detail>.*)'/;
         let offs = [];

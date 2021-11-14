@@ -16,7 +16,7 @@
 </style>
 
 <body>
-  <p id="title">Google Calendar API Quickstart</p>
+  <p id="title"></p>
 
   <!--Add buttons to initiate auth sequence and sign out-->
   <button hidden id="authorize_button">Authorize</button>
@@ -24,13 +24,17 @@
 
   <select hidden id="drpdwnCalendars"></select>
 
-  <pre id="content" style="white-space: pre-wrap;"></pre>
+  <p id="status_message"></p>
+
+  <img id="active_tab"/>
+
+  <pre id="content" style="white-space: pre-wrap"></pre>
 
   <!-- <script src="browser_action.js"></script> -->
   <script src="lib/jquery.min.js"></script>
-  <script src="popup.js"> </script>
-  <script src="services/LocalStorageService.js"> </script>
-  <script src="services/ipc.js"> </script>
+  <script src="popup.js"></script>
+  <script src="services/LocalStorageService.js"></script>
+  <script src="services/ipc.js"></script>
 </body>
 
 </html>

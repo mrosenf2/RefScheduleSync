@@ -79,8 +79,35 @@ let background = {
 };
 
 
+chrome.windows.onFocusChanged.addListener(() => {
+  onTabUpdate();
+});
+
+chrome.tabs.onActivated.addListener(() => {
+  onTabUpdate();
+});
 
 
+
+chrome.tabs.onUpdated.addListener((tabId, changeInfo) => {
+  if (changeInfo.url) {
+    onTabUpdate();
+  }
+});
 
 
 background.listenForRequests_();
+
+function onTabUpdate() {
+  let queryOptions = { active: true, currentWindow: true };
+  chrome.tabs.query(queryOptions, (async (tabs) => {
+    if (tabs.length > 0) {
+      let url = tabs[0].url;
+      if ((url.includes('horizon') || url.includes('arbiter'))) {
+        LocalStorageService.SetValue('StatusMessage', await LocalStorageService.GetValue('SyncStatus'));
+      } else {
+        LocalStorageService.SetValue('StatusMessage', "Current page is not a schedule");
+      }
+    }
+  }));
+}

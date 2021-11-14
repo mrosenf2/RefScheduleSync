@@ -74,6 +74,10 @@ class PopupPage {
         }
     }
 
+    static setStatusMessage(msg) {
+        document.getElementById('status_message').innerHTML = msg;
+    }
+
 
     static async init() {
         try {
@@ -82,6 +86,7 @@ class PopupPage {
             this.btnSignOut = /** @type {HTMLButtonElement} */ (document.getElementById('signout_button'));
 
             document.getElementById('title').innerHTML = await LocalStorageService.GetValue('SchedulingService');
+            document.getElementById('status_message').innerHTML = await LocalStorageService.GetValue('StatusMessage');
 
             this.selCalendar.onchange = (evt) => {
                 let target = /** @type {HTMLOptionElement} */ (evt.target);
@@ -96,6 +101,10 @@ class PopupPage {
             LocalStorageService.addListener('IsSignedIn', (newValue) => {
                 console.log(`Auth changed: ${newValue}`);
                 this.onUserSignInStatusChange(newValue);
+            })
+
+            LocalStorageService.addListener('StatusMessage', (newValue) => {
+                document.getElementById('status_message').innerHTML = newValue;
             })
 
             let isSignedIn = await LocalStorageService.GetValue('IsSignedIn');

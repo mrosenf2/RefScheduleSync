@@ -19,13 +19,15 @@ class ArbiterContent {
 
         const isSignedIn = await LocalStorageService.GetValue('IsSignedIn');
 
+        /** @type {Boolean} */
+        let isAccepted;
         for (let row of tblRows) {
             row.insertCell(2);
             if (row.className.toLowerCase().includes("headers")) {
                 let txtIsSignedIn = Common.CreateElementSignInSync(isSignedIn);
                 txtIsSignedIn.id = this.btnIsSignedIn;
                 txtIsSignedIn.onclick = () => {
-                    Common.SignInSyncHandler(this.sync.bind(this))
+                    Common.SignInSyncHandler(this.sync.bind(this));
                 };
                 row.cells[2].replaceChildren(txtIsSignedIn);
             }
@@ -34,8 +36,6 @@ class ArbiterContent {
                 let cb = document.createElement("input");
                 cb.type = "checkbox";
 
-                /** @type {Boolean} */
-                let isAccepted;
                 if (row.cells.length >= 11) {
                     isAccepted = row.cells[10].textContent.search("Accepted") > 0;
                 }
@@ -45,7 +45,7 @@ class ArbiterContent {
                     console.trace('cb.disabled = true');
                 }
                 row.cells[2].replaceChildren(cb);
-                let gameObj = new ARBGame(cb, row);
+                let gameObj = new ARBGame(row);
                 stgGames.push(gameObj);
                 totalPay += Number(gameObj.pay.replace(/[^0-9.-]+/g, ""));
             }
@@ -55,54 +55,6 @@ class ArbiterContent {
         document.getElementById(tbID).appendChild(el);
 
     };
-
-    /**
-     * @param {ARBGame} game
-     */
-    cbClicked(game) {
-        ArbiterContent.onCbClicked(game, this);
-    }
-
-
-    /**
-     *
-     * @param {ARBGame} gameObj
-     * @param {ArbiterContent} arbiterContent
-     */
-    static async onCbClicked(gameObj, arbiterContent) {
-        gameObj.calId = gameObj.checkbox.title; //get new calID because it doesnt update from when event listener is first bound
-        if (gameObj.checkbox.checked) {
-            //add game to calendar
-            gameObj.checkbox.disabled = true;
-            await gameObj.init();
-            let onError = (err) => {
-                gameObj.checkbox.checked = false;
-                alert(`error occurred; calendar not updated \n${err}`);
-            };
-            CalendarService.addGame(gameObj).then((isSuccess) => {
-
-                if (!isSuccess) {
-                    onError(null);
-                }
-                arbiterContent.sync();
-                gameObj.checkbox.disabled = false;
-            }).catch(err => {
-                onError(err);
-            });
-        } else {
-            //remove game to calendar
-            CalendarService.removeGame(gameObj).then((isSuccess) => {
-                if (!isSuccess) {
-                    gameObj.checkbox.checked = true;
-                    alert("error occurred; calendar not updated");
-                }
-                arbiterContent.sync();
-                gameObj.checkbox.disabled = false;
-            });
-        }
-
-    };
-
 
 
     async sync(addOnClick = false, prompAddGames = false) {
@@ -118,12 +70,11 @@ class ArbiterContent {
         let arbGames = [];
         for (let row of tblRows) {
             if (row.className.toLowerCase().includes("items")) {
-
-                let cb = /** @type {HTMLInputElement} */ (row.cells[2].children[0]);
-                cb.disabled = true;
-                let game = new ARBGame(cb, row);
-                arbGames.push(game);
+                arbGames.push(new ARBGame(row));
             }
+        }
+        if (arbGames.length == 0) {
+            return;
         }
 
         /** @type {CalendarEvent[]} */
@@ -174,20 +125,15 @@ class ArbiterContent {
                 uncheckedGames.push(gameObj);
             }
             if (addOnClick) {
-                cb.addEventListener('click', this.cbClicked.bind(this, gameObj));
+                cb.addEventListener('click', Common.onCBClicked.bind(this, gameObj));
             }
             cb.disabled = false;
         }
 
-        if (prompAddGames && uncheckedGames.length > 0) {
-            let gamesToAdd = uncheckedGames.filter(g => g.isAccepted && !g.isCancelled);
-            let result = window.confirm(`add ${gamesToAdd.length} unchecked games?`);
-            if (result) {
-                for (let gameObj of gamesToAdd) {
-                    await CalendarService.addGame(gameObj);
-                }
-                await this.sync();
-            }
+        LocalStorageService.SetValue('SyncStatus', 'In Sync');
+
+        if (prompAddGames) {
+            await Common.AddUncheckedGames(uncheckedGames);
         }
     };
 

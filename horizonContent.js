@@ -18,6 +18,7 @@ class HorizonContent {
     * Adds column to table. Sends info about games to background listener.
     */
     async addSyncColumn() {
+
         if (!this.isGameSchedulePage()) {
             console.log(`Expected title ${this.titleText} not found`);
             return;
@@ -56,12 +57,10 @@ class HorizonContent {
 
                     if (!isSignedIn || !isAccepted) {
                         cb.disabled = true;
-                        console.log('cb.disabled = true', {isSignedIn, isAccepted});
+                        console.log('cb.disabled = true', { isSignedIn, isAccepted });
                     }
                     row.cells[0].replaceChildren(cb);
-                    let gameObj = new HWRGame(cb, row);
-
-                    stgGames.push(gameObj);
+                    stgGames.push(new HWRGame(row));
                 }
             }
         }
@@ -105,48 +104,9 @@ class HorizonContent {
      * @param {HWRGame} game
      */
     cbClicked(game) {
-        HorizonContent.onCBClicked(game, this);
+        Common.onCBClicked(game);
     }
-
-
-    /**
-     * 
-     * @param {HWRGame} gameObj 
-     * @param {HorizonContent} horizonContent 
-     */
-    static async onCBClicked(gameObj, horizonContent) {
-        gameObj.calId = gameObj.checkbox.title; //get new calID because it doesnt update from when event listener is first bound
-        if (gameObj.checkbox.checked) {
-            //add game to calendar
-            gameObj.checkbox.disabled = true;
-            let onError = (err) => {
-                gameObj.checkbox.checked = false;
-                console.log(`error occurred; calendar not updated \n${err}`);
-                alert(`error occurred; calendar not updated \n${err}`);
-            };
-            try {
-                let resp = await CalendarService.addGame(gameObj);
-                if (!resp.ok) {
-                    onError(null);
-                }
-                gameObj.checkbox.disabled = false;
-                gameObj.checkbox.checked = true;
-                gameObj.checkbox.title = resp.data.id;
-            } catch (err) {
-                onError(err);
-            }
-        } else {
-            //remove game to calendar
-            let isSuccess = await CalendarService.removeGame(gameObj);
-            if (!isSuccess) {
-                gameObj.checkbox.checked = true;
-                alert("error occurred; calendar not updated");
-            }
-            horizonContent.sync();
-            gameObj.checkbox.disabled = false;
-        }
-    }
-
+    
 
     /**
      * 
@@ -169,7 +129,7 @@ class HorizonContent {
         }
     }
 
-    async sync(addOnClick = false, isInteractive = false) {
+    async sync(addOnClick = false, promptAddGames = false) {
 
         const isSignedIn = await LocalStorageService.GetValue('IsSignedIn');
         if (!isSignedIn) {
@@ -186,17 +146,15 @@ class HorizonContent {
         let hwrGames = [];
         for (let row of tblRows) {
             if (row.id.toLowerCase().includes("assignment")) {
-
-                let cb = /** @type {HTMLInputElement} */ (row.cells[0].children[0]);
-                hwrGames.push(new HWRGame(cb, row));
+                hwrGames.push(new HWRGame(row));
             }
+        }
+        if (hwrGames.length == 0) {
+            return;
         }
 
         /** @type {CalendarEvent[]} */
         let events;
-        if (hwrGames.length == 0) {
-            return;
-        }
         try {
             let minDate = hwrGames[0].date;
             let maxDate = hwrGames[hwrGames.length - 1].date;
@@ -209,23 +167,10 @@ class HorizonContent {
             for (let gameObj of hwrGames) {
                 gameObj.checkbox.disabled = true;
             }
+            LocalStorageService.SetValue('SyncStatus', 'unable to fetch events from calendar.');
             return;
         }
 
-        /**
-         * @param {HWRGame} game 
-         * @param {string} strName 
-         * @returns {boolean}
-         */
-        function doesNameExist(game, strName) {
-            return game.officials.find(s => s.includes(strName)) != undefined;
-        }
-        // if my name does not appear on the list of officials, leave...        
-        if (hwrGames.find(g => !doesNameExist(g, 'Rosenfeld'))) {
-            console.log('Sync cancelled because you are viewing a public list');
-            alert('Sync cancelled because you are viewing a public list');
-            return;
-        }
 
         let uncheckedGames = [];
         for (let gameObj of hwrGames) {
@@ -269,27 +214,17 @@ class HorizonContent {
                 uncheckedGames.push(gameObj);
             }
             if (addOnClick) {
-                cb.addEventListener('click', this.cbClicked.bind(this, gameObj));
+                cb.addEventListener('click', Common.onCBClicked.bind(this, gameObj));
             }
             cb.disabled = isDisabled;
         }
 
-        if (isInteractive) {
-            if (uncheckedGames.length > 0) {
-                let gamesToAdd = uncheckedGames.filter(g => g.isAccepted && !g.isCancelled);
-                let result = window.confirm(`add ${gamesToAdd.length} unchecked games?`);
-                if (result) {
-                    for (let gameObj of gamesToAdd) {
-                        await CalendarService.addGame(gameObj);
-                    }
-                    await this.sync();
-                }
-            } else {
-                alert('no unchecked games to add');
-            }
+        LocalStorageService.SetValue('SyncStatus', 'In Sync');
+
+        if (promptAddGames) {
+            await Common.AddUncheckedGames(uncheckedGames);
         }
     };
-
 }
 
 
