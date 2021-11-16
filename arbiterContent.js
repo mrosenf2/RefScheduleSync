@@ -1,4 +1,9 @@
-class ArbiterContent {
+import Common from "./commonContent.js";
+import LocalStorageService from "./services/LocalStorageService.js";
+import { AuthService, CalendarService } from "./services/ipc.js";
+import ARBGame from "./ARBGame.js";
+
+export default class ArbiterContent {
 
     btnIsSignedIn = "isSignedIn";
     tbID = "ctl00_ContentHolder_pgeGameScheduleEdit_conGameScheduleEdit_dgGames";
@@ -80,8 +85,8 @@ class ArbiterContent {
         /** @type {CalendarEvent[]} */
         let events;
         try {
-            let minDate = arbGames[0].date;
-            let maxDate = arbGames[arbGames.length - 1].date;
+            let minDate = arbGames[0].startDate;
+            let maxDate = arbGames[arbGames.length - 1].startDate;
             events = await CalendarService.getEvents(minDate, maxDate);
         } catch (err) {
             alert(`unable to fetch events from calendar. Try refreshing the page.\n ${err}`);

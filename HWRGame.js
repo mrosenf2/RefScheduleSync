@@ -1,4 +1,6 @@
-class HWRGame extends ScheduledGame {
+import ScheduledGame from "./ScheduledGame.js";
+
+export default class HWRGame extends ScheduledGame {
     
     /**
      * @param {HTMLTableRowElement} row
@@ -7,7 +9,7 @@ class HWRGame extends ScheduledGame {
         super(row);
 
         let cb = /** @type {HTMLInputElement} */ (row.cells[0].children[0]);
-        super.checkbox = cb;
+        this.checkbox = cb;
 
         const GAME_ID = 0, DATE = 1, TIME = 2, LEVEL = 3, LOCATION = 6, HOME_TEAM = 4, AWAY_TEAM = 5, PAY = 7, OFFICIALS = 9, GAME_DETAILS = 10;
         let regex = /title:'(?<name>.*)',type:'',text:'(?<detail>.*)'/;
@@ -39,41 +41,41 @@ class HWRGame extends ScheduledGame {
         if (duration_arr.length > 1)
             time_mins = duration_arr[1];
 
-        super.gameID = row.id;
+        this.gameID = row.id;
+        this.startDate = new Date(Date.parse(row.cells[DATE].innerText + " " + row.cells[TIME].innerText.replace('pm', ' pm')))
+        this.time_hrs = Number(time_hrs);
+        this.time_mins = Number(time_mins);
+        this.endDate = new Date(this.startDate.getTime() + this.time_hrs * 60 * 60 * 1000 + this.time_mins * 60 * 1000)
+        this.level = row.cells[LEVEL].innerText;
+        this.location = location_text;
         // @ts-ignore
-        super.date = moment(row.cells[DATE].innerText + " " + row.cells[TIME].innerText, "MM-DD-YYYY h:m a").format();
-        super.time_hrs = Number(time_hrs);
-        super.time_mins = Number(time_mins);
-        super.level = row.cells[LEVEL].innerText;
-        super.location = location_text;
+        this.locationURL = row.cells[LOCATION].children[0].href;
+        this.home = row.cells[HOME_TEAM].innerText;
+        this.away = row.cells[AWAY_TEAM].innerText;
+        this.pay = row.cells[PAY].innerText;
         // @ts-ignore
-        super.locationURL = row.cells[LOCATION].children[0].href;
-        super.home = row.cells[HOME_TEAM].innerText;
-        super.away = row.cells[AWAY_TEAM].innerText;
-        super.pay = row.cells[PAY].innerText;
-        // @ts-ignore
-        super.detailsURL = row.cells[GAME_ID].children[0].href;
-        super.officials = offs;
-        super.calId = null;
+        this.detailsURL = row.cells[GAME_ID].children[0].href;
+        this.officials = offs;
+        this.calId = null;
 
         let locationURLParams = new URLSearchParams(this.locationURL);
-        super.address = locationURLParams.get('daddr');
+        this.address = locationURLParams.get('daddr');
 
         try {
             if (row.cells[GAME_DETAILS].innerText.includes("CANCELLED")) {
-                super.level = `[CANCELLED] ${super.level}`;
-                super.isCancelled = true;
+                this.level = `[CANCELLED] ${this.level}`;
+                this.isCancelled = true;
                 cb.style.visibility = 'hidden';
             }
 
             if (row.cells[GAME_DETAILS].childElementCount >= 5) {
-                super.isAccepted = false;
+                this.isAccepted = false;
                 cb.style.visibility = 'hidden';
             }
         } catch (error) {
             // ignore
         }
 
-        super.eventDescription = this.getEventDescription();
+        this.eventDescription = this.getEventDescription();
     }
 }

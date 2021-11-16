@@ -1,4 +1,9 @@
-class Content {
+import ArbiterContent from "./arbiterContent.js";
+import HorizonContent from "./horizonContent.js";
+import { AuthService } from "./services/ipc.js";
+import LocalStorageService from "./services/LocalStorageService.js";
+
+export default class Content {
 
     static async setSignInStatus() {
         const isAuth = await AuthService.IsSignedIn();
@@ -53,9 +58,9 @@ class Content {
     }
 };
 
-window.addEventListener('load', function () {
-    Content.init();
-}, false);
+// window.addEventListener('load', function () {
+//     Content.init();
+// }, false);
 
 
 

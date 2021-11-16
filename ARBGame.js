@@ -1,4 +1,6 @@
-class ARBGame extends ScheduledGame {
+import ScheduledGame from "./ScheduledGame.js";
+
+export default class ARBGame extends ScheduledGame {
 
 
     /** @returns {Promise<string[]>} */
@@ -75,7 +77,8 @@ class ARBGame extends ScheduledGame {
         const GAME_ID = 0, DATE = 4, LEVEL = 5, LOCATION = 6, HOME_TEAM = 7, AWAY_TEAM = 8, PAY = 9;
         super.row = row;
         super.gameID = row.cells[GAME_ID].innerText;
-        super.date = moment(row.cells[DATE].innerText, "MM-DD-YYYY h:m a").format();
+        let dateArr = row.cells[DATE].innerText.replace('\n', ' ').split(' ')
+        super.startDate = new Date(`${dateArr[1]} ${dateArr[0]} ${dateArr[2]} ${dateArr[3]}`)
         super.level = row.cells[LEVEL].innerText;
         super.location = row.cells[LOCATION].innerText;
         super.address = "";

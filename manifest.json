@@ -9,25 +9,14 @@
     "tabs",
     "activeTab",
     "debugger",
-    "https://accounts.google.com/o/oauth2/token",
     "identity"
   ],
-  "browser_action": {
+  "action": {
     "default_popup": "popup.html"
   },
   "background": {
-    "scripts": [
-      "background_scripts/BackgroundScript.js",
-      "background_scripts/CalendarService.js",
-      "background_scripts/auth.js",
-      "services/LocalStorageService.js",
-      "types/ScheduledGame.js",
-      "HWRGame.js",
-      "ARBGame.js",
-      "lib/moment.js",
-      "lib/jquery.min.js"
-    ],
-    "persistent": false
+    "service_worker": "service_worker.js",
+    "type": "module"
   },
   "oauth2": {
     "client_id": "439216554338-hs93a8g50qp7l349dfufua7spniknf6n.apps.googleusercontent.com",
@@ -35,7 +24,9 @@
       "https://www.googleapis.com/auth/calendar"
     ]
   },
-  "content_security_policy": "script-src 'self' https://calendar.google.com https://apis.google.com; object-src 'self'",
+  "content_security_policy": {
+    "sandbox ": "script-src 'self' https://calendar.google.com https://apis.google.com; object-src 'self'"
+  },
   "content_scripts": [
     {
       "matches": [
@@ -44,20 +35,30 @@
       ],
       "css": ["main.css"],
       "js": [
-        "types/ScheduledGame.js",
-        "HWRGame.js",
-        "ARBGame.js",
-        "services/ipc.js",
-        "services/LocalStorageService.js",
-        "main.js",
-        "commonContent.js",
-        "horizonContent.js",
-        "arbiterContent.js",
+        "content_script.js",
         "lib/moment.js",
         "lib/jquery.min.js"
       ]
     }
   ],
+  "web_accessible_resources": [
+    {
+      "resources": [
+        "main.js",
+        "ScheduledGame.js",
+        "HWRGame.js",
+        "ARBGame.js",
+        "services/ipc.js",
+        "services/LocalStorageService.js",
+        "commonContent.js",
+        "horizonContent.js",
+        "arbiterContent.js"
+      ], "matches": [
+        "https://www1.arbitersports.com/*",
+        "https://www.horizonwebref.com/*"
+      ]
+    }
+  ],
   
-  "manifest_version": 2
+  "manifest_version": 3
 }

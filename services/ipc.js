@@ -1,21 +1,23 @@
+import ScheduledGame from "../ScheduledGame.js";
+
 /**
  * @param {serviceName} method
  */
-const sendMessageToBackground = (method, params = null) => {
+const sendMessageToBackground = async (method, params = null) => {
     /** @type {RequestMessage} */
     let message = { method, params };
     return new Promise(function (resolve, reject) {
-        chrome.runtime.sendMessage(message, /** @type {myCallback} */ function (resp) {
-            if (!resp.ok) {
-                reject(resp.data);
-            } else {
-                resolve(resp.data);
-            }
-        });
+        chrome.runtime.sendMessage(message, /** @type {myCallback} */ (resp) => {
+                if (!resp.ok) {
+                    reject(resp.data);
+                } else {
+                    resolve(resp.data);
+                }
+            });
     });
 };
 
-class CalendarService {
+export class CalendarService {
     /**
      * @param {string} minDate
      * @param {string} maxDate
@@ -48,7 +50,7 @@ class CalendarService {
     }
 }
 
-class AuthService {
+export class AuthService {
     static AuthInteractive() {
         return sendMessageToBackground('auth.interactive');
     }

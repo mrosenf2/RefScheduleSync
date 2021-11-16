@@ -1,5 +1,12 @@
 'use strict';
-class BGCalendarService {
+
+import LocalStorageService from "../services/LocalStorageService.js";
+import ScheduledGame from "../ScheduledGame.js";
+import BGAuthService from "./auth.js";
+// import * as moment from "../node_modules/moment/moment.js"
+
+
+export default class BGCalendarService {
 
     constructor() {
         /**
@@ -155,9 +162,12 @@ class BGCalendarService {
             return null;
         }
 
-        let startDate = gameObj.date;
-        // @ts-ignore
-        let endDate = moment(startDate).add(gameObj.time_hrs * 60 + gameObj.time_mins, 'minutes').format();
+        let startDate = new Date(gameObj.startDate);
+        let endDate = new Date(gameObj.endDate);
+        if (!endDate.getTime()) {
+            // add 1hr 20mins to start by default
+            endDate = new Date(startDate.getTime() + 1 * 60 * 60 * 1000 + 20 * 60 * 1000)
+        }
         let data = {
             "start": {
                 "dateTime": startDate
@@ -167,7 +177,12 @@ class BGCalendarService {
             },
             "summary": `${gameObj.level} - ${gameObj.location}`,
             "location": `${gameObj.address}`,
-            "description": gameObj.eventDescription
+            "description": gameObj.eventDescription,
+            "extendedProperties": {
+                "private": {
+                    "created_by": "extension"
+                }
+            }
         };
 
         try {

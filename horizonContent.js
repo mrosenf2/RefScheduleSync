@@ -1,6 +1,11 @@
 'use strict';
 
-class HorizonContent {
+import LocalStorageService from "./services/LocalStorageService.js";
+import Common from "./commonContent.js";
+import HWRGame from "./HWRGame.js";
+import { AuthService, CalendarService } from "./services/ipc.js";
+
+export default class HorizonContent {
     tbID = "schedResults";
     btnIsSignedIn = "isSignedIn";
     /** @type {HTMLParagraphElement} */
@@ -84,8 +89,8 @@ class HorizonContent {
                 return false;
             }
 
-            const date1 = new Date(g1.date);
-            const date2 = new Date(g2.date);
+            const date1 = new Date(g1.startDate);
+            const date2 = new Date(g2.startDate);
 
             return date1.toDateString() == date2.toDateString()
                 && getHoursAndMins(date2) <= getHoursAndMins(date1) + g1.time_hrs + (g1.time_mins / 60) + 1;
@@ -121,9 +126,9 @@ class HorizonContent {
         } else {
             const isAddSuccess = await CalendarService.addGame(gameToUpdate);
             if (!isAddSuccess.ok) {
-                alert(`ERROR UPDATING DESCRIPTION: \n${gameToUpdate.level} - ${gameToUpdate.location} (${gameToUpdate.date})`);
+                alert(`ERROR UPDATING DESCRIPTION: \n${gameToUpdate.level} - ${gameToUpdate.location} (${gameToUpdate.startDate})`);
             } else {
-                alert(`UPDATING DESCRIPTION: \n${gameToUpdate.level} - ${gameToUpdate.location} (${gameToUpdate.date})`);
+                alert(`UPDATING DESCRIPTION: \n${gameToUpdate.level} - ${gameToUpdate.location} (${gameToUpdate.startDate})`);
                 console.log('update success');
             }
         }
@@ -156,8 +161,8 @@ class HorizonContent {
         /** @type {CalendarEvent[]} */
         let events;
         try {
-            let minDate = hwrGames[0].date;
-            let maxDate = hwrGames[hwrGames.length - 1].date;
+            let minDate = hwrGames[0].startDate;
+            let maxDate = hwrGames[hwrGames.length - 1].startDate;
             events = await CalendarService.getEvents(minDate, maxDate);
         } catch (err) {
             const msg = `unable to fetch events from calendar. Try refreshing the page.\n ${err.message}`;

@@ -4,7 +4,7 @@
  * @param {any} newValue
  */
 
-class LocalStorageService {
+export default class LocalStorageService {
 
     /** @returns {Promise<SessionStorage>} SessionStorage */
     static async GetAllStorageSyncData() {

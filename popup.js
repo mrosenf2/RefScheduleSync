@@ -2,6 +2,10 @@ var API_KEY = 'AIzaSyAzEVzT8vSow_yUZbzjGnlAmhVaaFVR9Og';
 console.log('in popup');
 console.log(window.location.href);
 
+import BGCalendarService from "./background_scripts/CalendarService.js";
+import LocalStorageService from "./services/LocalStorageService.js";
+import { AuthService, CalendarService } from "./services/ipc.js";
+
 // When the popup is loaded, fetch the events in this tab from the
 // background page, set up the appropriate layout, etc.
 
@@ -43,7 +47,8 @@ class PopupPage {
 
     static async setUserSignedIn() {
         try {
-            const cals = (await CalendarService.getCalendars()).filter(c => c.accessRole == 'owner');
+            let calService = await BGCalendarService.GetInstance();
+            const cals = (await calService.getCalendars()).filter(c => c.accessRole == 'owner');
             const selectedCalID = await LocalStorageService.GetValue('SelectedCalID');
             let selectedIdx = -1;
             cals.forEach((cal, idx) => {

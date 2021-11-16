@@ -1,4 +1,6 @@
-class BGAuthService {
+import LocalStorageService from "../services/LocalStorageService.js";
+
+export default class BGAuthService {
 
     /** @type {string} */
     static AuthToken;

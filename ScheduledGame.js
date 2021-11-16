@@ -1,10 +1,13 @@
-class ScheduledGame {
+export default class ScheduledGame {
 
     constructor(row) {
         this.row = row;
     }
 
-    /** @type {HTMLInputElement} */
+    /** 
+     * @type {HTMLInputElement} 
+     * @public
+    */
     checkbox;
 
     /** @type {HTMLTableRowElement} */
@@ -13,10 +16,16 @@ class ScheduledGame {
     /** @type {string} */
     gameID;
 
-    /** @type {string} */
-    date;
+    /** @type {Date} */
+    startDate;
 
-    /** @type {Number} */
+    /** @type {Date} */
+    endDate;
+
+    /**
+     * @public
+     * @type {Number} 
+     */
     time_hrs;
 
     /** @type {Number} */

@@ -1,4 +1,8 @@
-class Common {
+import { AuthService, CalendarService } from "./services/ipc.js";
+import LocalStorageService from "./services/LocalStorageService.js";
+import ScheduledGame from "./ScheduledGame.js";
+
+export default class Common {
     /**
      * @param {(addOnClick: boolean, promptAddGames: boolean) => void} syncCallback
      */
@@ -53,7 +57,7 @@ class Common {
     static async AddGameToCalendar(gameObj) {
         let onError = (err) => {
             gameObj.checkbox.checked = false;
-            console.log(`error occurred; calendar not updated \n${err}`);
+            console.warn('error occurred; calendar not updated', {err});
             alert(`error occurred; calendar not updated \n${err}`);
         };
         try {
@@ -63,7 +67,7 @@ class Common {
                 gameObj.checkbox.checked = true;
                 gameObj.checkbox.title = resp.data.id;
             } else {
-                onError(null);
+                onError(resp.data);
             }
         } catch (err) {
             onError(err);
@@ -74,7 +78,7 @@ class Common {
     static async RemoveGameFromCalendar(gameObj) {
         let onError = (err) => {
             gameObj.checkbox.checked = true;
-            console.log(`error occurred; calendar not updated \n${err}`);
+            console.warn('error occurred; calendar not updated', { err });
             alert(`error occurred; calendar not updated \n${err}`);
         };
 

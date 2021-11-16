@@ -2,5 +2,8 @@
   "devDependencies": {
     "@types/chrome": "^0.0.163",
     "googleapis": "^91.0.0"
+  },
+  "dependencies": {
+    "moment": "^2.29.1"
   }
 }
