@@ -36,7 +36,6 @@
       "css": ["main.css"],
       "js": [
         "content_script.js",
-        "lib/moment.js",
         "lib/jquery.min.js"
       ]
     }

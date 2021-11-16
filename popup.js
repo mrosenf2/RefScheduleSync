@@ -36,6 +36,9 @@ class PopupPage {
     /** @type {HTMLSelectElement} */
     static selCalendar;
 
+    /** @type {Calendar[]} */
+    static UserCalendars;
+
     /**
      * @param {boolean} isSignedIn
      */
@@ -48,15 +51,15 @@ class PopupPage {
     static async setUserSignedIn() {
         try {
             let calService = await BGCalendarService.GetInstance();
-            const cals = (await calService.getCalendars()).filter(c => c.accessRole == 'owner');
-            const selectedCalID = await LocalStorageService.GetValue('SelectedCalID');
+            PopupPage.UserCalendars = (await calService.getCalendars()).filter(c => c.accessRole == 'owner');
+            const selectedCal = await LocalStorageService.GetValue('SelectedCalendar');
             let selectedIdx = -1;
-            cals.forEach((cal, idx) => {
+            PopupPage.UserCalendars.forEach((cal, idx) => {
                 var opt = document.createElement('option');
                 opt.value = cal.id;
                 opt.innerHTML = cal.summary;
                 this.selCalendar.appendChild(opt);
-                if (cal.id == selectedCalID) {
+                if (cal.id == selectedCal?.id) {
                     selectedIdx = idx;
                 }
             });
@@ -97,7 +100,8 @@ class PopupPage {
                 let target = /** @type {HTMLOptionElement} */ (evt.target);
                 console.log(target);
                 const selectedCalID = target.value;
-                LocalStorageService.SetValue('SelectedCalID', selectedCalID);
+                const selectedCalendar = PopupPage.UserCalendars.find(c => c.id === selectedCalID);
+                LocalStorageService.SetValue('SelectedCalendar', {id: selectedCalendar.id, title: selectedCalendar.summary});
             }
 
             this.btnSignIn.onclick = btnSignIn_click;

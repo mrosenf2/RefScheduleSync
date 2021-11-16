@@ -9,8 +9,8 @@ class SessionStorage {
     SchedulingService;
 
     /** CalID of selected calendar
-     * @type {string} */
-    SelectedCalID;
+     * @type {{id: string, title: string}} */
+    SelectedCalendar;
 
     /** Message to display in extension popup
      * @type {string} */

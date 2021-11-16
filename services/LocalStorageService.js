@@ -21,7 +21,7 @@ export default class LocalStorageService {
             // Asynchronously fetch all data from storage.sync.
             chrome.storage.local.set({ [key]: value }, function () {
                 // Pass any observed errors down the promise chain.
-                console.trace(`set ${key} to ${value}`);
+                console.trace(`set ${key} to`, {value});
                 if (chrome.runtime.lastError) {
                     console.warn(chrome.runtime.lastError)
                     reject(chrome.runtime.lastError);

@@ -163,11 +163,11 @@ export default class HorizonContent {
         try {
             let minDate = hwrGames[0].startDate;
             let maxDate = hwrGames[hwrGames.length - 1].startDate;
-            events = await CalendarService.getEvents(minDate, maxDate);
+            events = await CalendarService.getEvents(minDate.toISOString(), maxDate.toISOString());
         } catch (err) {
-            const msg = `unable to fetch events from calendar. Try refreshing the page.\n ${err.message}`;
+            const msg = `unable to fetch events from calendar. Try refreshing the page.\n ${err}`;
             alert(msg);
-            console.log(msg, err);
+            console.error(msg, err);
             this.txtIsSignedIn.innerHTML = "Refresh";
             for (let gameObj of hwrGames) {
                 gameObj.checkbox.disabled = true;

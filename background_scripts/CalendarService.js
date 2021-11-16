@@ -3,7 +3,6 @@
 import LocalStorageService from "../services/LocalStorageService.js";
 import ScheduledGame from "../ScheduledGame.js";
 import BGAuthService from "./auth.js";
-// import * as moment from "../node_modules/moment/moment.js"
 
 
 export default class BGCalendarService {
@@ -12,15 +11,15 @@ export default class BGCalendarService {
         /**
          * ID of desired calendar
          */
-        this.calID = "1hjk892r88cncfm8ctgp07r00g@group.calendar.google.com";
+        this.calID = "";
         this.isInit = false;
         this.APIURL_get_calendars = 'https://www.googleapis.com/calendar/v3/users/me/calendarList';
-        this.APIURL_get_events = 'https://www.googleapis.com/calendar/v3/calendars/{calendarId}/events?maxResults=2000&timeMin={timeMin}&timeMax={timeMax}';
-        this.APIURL_add_events = 'https://www.googleapis.com/calendar/v3/calendars/{calendarId}/events';
-        this.APIURL_del_event = 'https://www.googleapis.com/calendar/v3/calendars/{calendarId}/events/{eventId}';
+        this._APIURL_get_events = 'https://www.googleapis.com/calendar/v3/calendars/{calendarId}/events?maxResults=2000&timeMin={timeMin}&timeMax={timeMax}';
+        this._APIURL_add_events = 'https://www.googleapis.com/calendar/v3/calendars/{calendarId}/events';
+        this._APIURL_del_event = 'https://www.googleapis.com/calendar/v3/calendars/{calendarId}/events/{eventId}';
     }
 
-    
+
 
     /** @type {BGCalendarService} */
     instance = null;
@@ -33,19 +32,34 @@ export default class BGCalendarService {
     }
 
 
-    /**
-     * Inits calendar API with up to date auth token
-     */
     async init() {
+        this.calID = (await LocalStorageService.GetValue('SelectedCalendar'))?.id;
+        LocalStorageService.addListener('SelectedCalendar', async (newValue) => {
+            this.calID = newValue.id;
+        });
 
-        LocalStorageService.addListener('IsSignedIn', async (newValue) => {
-            console.log(`Auth changed: ${newValue}`);
-        })
 
         this.isInit = true;
-        this.APIURL_add_events = this.APIURL_add_events.replace('{calendarId}', encodeURIComponent(this.calID));
-        this.APIURL_del_event = this.APIURL_del_event.replace('{calendarId}', encodeURIComponent(this.calID));
     };
+
+    /**
+     * @param {string} url
+     */
+    insertCalId(url) {
+        return url.replace('{calendarId}', encodeURIComponent(this.calID))
+    }
+
+    get APIURL_add_events() {
+        return this.insertCalId(this._APIURL_add_events);
+    }
+
+    get APIURL_del_event() { 
+        return this.insertCalId(this._APIURL_del_event);
+    }
+
+    get APIURL_get_events() {
+        return this.insertCalId(this._APIURL_get_events);
+    }
 
     /**
      * returns promise, parameter on success is list of calendar events
@@ -65,6 +79,10 @@ export default class BGCalendarService {
         if (!this.isInit) {
             console.warn('GetEvents called before init');
             return null;
+        }
+
+        if (!this.calID) {
+            throw "Calendar ID not selected"
         }
 
         let url = this.getAPIURL_get_events(minDate, maxDate);
@@ -100,7 +118,6 @@ export default class BGCalendarService {
         timeMax.setDate(timeMax.getDate() + 7);
 
         return this.APIURL_get_events
-            .replace('{calendarId}', encodeURIComponent(this.calID))
             .replace('{timeMin}', timeMin.toISOString())
             .replace('{timeMax}', timeMax.toISOString());
     }
@@ -166,7 +183,7 @@ export default class BGCalendarService {
         let endDate = new Date(gameObj.endDate);
         if (!endDate.getTime()) {
             // add 1hr 20mins to start by default
-            endDate = new Date(startDate.getTime() + 1 * 60 * 60 * 1000 + 20 * 60 * 1000)
+            endDate = new Date(startDate.getTime() + 1 * 60 * 60 * 1000 + 20 * 60 * 1000);
         }
         let data = {
             "start": {
