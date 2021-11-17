@@ -1,4 +1,3 @@
-var API_KEY = 'AIzaSyAzEVzT8vSow_yUZbzjGnlAmhVaaFVR9Og';
 console.log('in popup');
 console.log(window.location.href);
 

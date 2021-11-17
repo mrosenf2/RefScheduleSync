@@ -36,16 +36,18 @@ export default class HWRGame extends ScheduledGame {
         let regex_duration = /(\d*) hour(s?) ?(\d*)/;
         let durationMouseOver = row.cells[TIME].children[0].attributes.getNamedItem("onmouseover").value;
         let duration_arr = regex_duration.exec(durationMouseOver).filter(h => (Number(h))).map(n => Number(n));
-        let time_hrs = duration_arr[0];
-        let time_mins = 0;
+        let duration_hrs = duration_arr[0];
+        let duration_mins = 0;
         if (duration_arr.length > 1)
-            time_mins = duration_arr[1];
+            duration_mins = duration_arr[1];
 
         this.gameID = row.id;
-        this.startDate = new Date(Date.parse(row.cells[DATE].innerText + " " + row.cells[TIME].innerText.replace('pm', ' pm')))
-        this.time_hrs = Number(time_hrs);
-        this.time_mins = Number(time_mins);
-        this.endDate = new Date(this.startDate.getTime() + this.time_hrs * 60 * 60 * 1000 + this.time_mins * 60 * 1000)
+        const strDate = row.cells[DATE].innerText;
+        const strTime = row.cells[TIME].innerText.replace('am', ' am').replace('pm', ' pm');
+        this.startDate = new Date(Date.parse(`${strDate} ${strTime}`))
+        this.duration_hrs = Number(duration_hrs);
+        this.duration_mins = Number(duration_mins);
+        this.endDate = new Date(this.startDate.getTime() + this.getDurationInMls())
         this.level = row.cells[LEVEL].innerText;
         this.location = location_text;
         // @ts-ignore
@@ -77,5 +79,11 @@ export default class HWRGame extends ScheduledGame {
         }
 
         this.eventDescription = this.getEventDescription();
+    }
+
+    getDurationInMls() {
+        const hours_ms = this.duration_hrs * 60 * 60 * 1000;
+        const mins_ms = this.duration_mins * 60 * 1000;
+        return hours_ms + mins_ms;
     }
 }

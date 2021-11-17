@@ -31,6 +31,24 @@ export default class LocalStorageService {
         });
     }
 
+    /**
+     * @param {SessionStorage} state
+     */
+    static async SetState(state) {
+        return new Promise((resolve, reject) => {
+            // Asynchronously fetch all data from storage.sync.
+            chrome.storage.local.set(state, function () {
+                console.trace('set state to', { state });
+                // Pass any observed errors down the promise chain.
+                if (chrome.runtime.lastError) {
+                    console.warn(chrome.runtime.lastError);
+                    reject(chrome.runtime.lastError);
+                }
+                resolve();
+            });
+        });
+    }
+
 
     /**
      * @template {keyof (SessionStorage)} K

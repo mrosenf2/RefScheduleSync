@@ -22,14 +22,11 @@ export default class ScheduledGame {
     /** @type {Date} */
     endDate;
 
-    /**
-     * @public
-     * @type {Number} 
-     */
-    time_hrs;
+    /** @type {Number} */
+    duration_hrs;
 
     /** @type {Number} */
-    time_mins;
+    duration_mins;
 
     /** @type {string} */
     level;
@@ -69,11 +66,7 @@ export default class ScheduledGame {
 
     /** @type {boolean} */
     isAccepted = true;
-
-    // TODO:
-    /** @type {Number} */
-    durationInMins;
-
+    
     async init() {
 
     }

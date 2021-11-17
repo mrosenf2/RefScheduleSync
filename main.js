@@ -41,6 +41,12 @@ export default class Content {
         LocalStorageService.addListener('IsSignedIn', async (newValue) => {
             if (!newValue) {
                 await AuthService.ClearAllCachedAuthTokens();
+                LocalStorageService.SetState({
+                    IsSignedIn: false,
+                    SelectedCalendar: null,
+                    StatusMessage: null,
+                    SyncStatus: 'Not Synced'
+                })
             }
             
             await scheduler.addSyncColumn();

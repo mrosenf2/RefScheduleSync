@@ -44,6 +44,7 @@ export class CalendarService {
 
     /**
      * @param {ScheduledGame} gameObj
+     * @returns {Promise<boolean>}
      */
     static removeGame(gameObj) {
         return sendMessageToBackground('calendar.removeGame', { game: gameObj });
@@ -74,7 +75,7 @@ export class AuthService {
             const token = await AuthService.AuthSilent();
             isAuth = true;
         } catch (error) {
-            console.log(error);
+            console.warn(error);
         }
         return isAuth;
     }

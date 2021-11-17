@@ -1,5 +1,3 @@
-'use strict';
-
 import LocalStorageService from "../services/LocalStorageService.js";
 import ScheduledGame from "../ScheduledGame.js";
 import BGAuthService from "./auth.js";
@@ -35,7 +33,7 @@ export default class BGCalendarService {
     async init() {
         this.calID = (await LocalStorageService.GetValue('SelectedCalendar'))?.id;
         LocalStorageService.addListener('SelectedCalendar', async (newValue) => {
-            this.calID = newValue.id;
+            this.calID = newValue?.id;
         });
 
 
@@ -177,6 +175,10 @@ export default class BGCalendarService {
         console.log("adding game", gameObj);
         if (!this.isInit) {
             return null;
+        }
+
+        if (!gameObj.startDate) {
+            throw 'unable to add game: no start date specified'
         }
 
         let startDate = new Date(gameObj.startDate);

@@ -35,10 +35,8 @@ export default class HorizonContent {
             (document.getElementById(this.tbID).children[0].children);
 
 
-        /** @type {HWRGame[]} */
-        let stgGames = [];
-        /** @type {boolean} */
-        let isAccepted;
+        /** @type {HWRGame[]} */ let stgGames = [];
+        /** @type {boolean} */ let isAccepted;
 
         for (let row of tblRows) {
             if (row.cells) {
@@ -74,7 +72,6 @@ export default class HorizonContent {
             const g2 = stgGames[i + 1];
             if (checkTimeBetweenGames(g1, g2)) {
                 g2.row.classList.add("warnTimeBetweenGames");
-                console.log(g2.row);
             }
 
         }
@@ -88,30 +85,14 @@ export default class HorizonContent {
             if (g1.address == g2.address) {
                 return false;
             }
+            
+            // check that game 2 starts at least 1 hour after game 1 ends
+            return g2.startDate.getTime() <= g1.endDate.getTime() + 1000 * 60 * 60;
 
-            const date1 = new Date(g1.startDate);
-            const date2 = new Date(g2.startDate);
-
-            return date1.toDateString() == date2.toDateString()
-                && getHoursAndMins(date2) <= getHoursAndMins(date1) + g1.time_hrs + (g1.time_mins / 60) + 1;
         }
 
-        /**
-         * @param {Date} d 
-         */
-        function getHoursAndMins(d) {
-            return d.getHours() + d.getMinutes() / 60;
-        }
     }
 
-
-    /**
-     * @param {HWRGame} game
-     */
-    cbClicked(game) {
-        Common.onCBClicked(game);
-    }
-    
 
     /**
      * 

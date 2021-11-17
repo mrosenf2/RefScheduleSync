@@ -20,25 +20,18 @@ export default class BGAuthService {
      * @param {Boolean} isInteractive whether or not authentication UI is displayed to the user
      * @returns {Promise<string>} authentication token
      */
-    static async GetAuthToken(isInteractive = false) {
-        console.trace(`getting AuthToken (interactive:${isInteractive})`);
-        return await new Promise((resolve, reject) => {
-            chrome.identity.getAuthToken({ 'interactive': isInteractive, }, (authToken, scopes) => {
+    static GetAuthToken(isInteractive = false) {
+        return new Promise((resolve, reject) => {
+            chrome.identity.getAuthToken({ 'interactive': isInteractive, }, (authToken) => {
                 if (authToken) {
-                    if (isInteractive) {
-                        LocalStorageService.SetValue('IsSignedIn', true);
-                    }
+                    isInteractive && LocalStorageService.SetValue('IsSignedIn', true);
                     resolve(authToken);
                 } else {
-                    console.log(`Warning: Error authorizing for Chrome browser, attemping auth for Edge browser: ${chrome.runtime.lastError.message}`);
-                    BGAuthService.AuthorizeUsingRedirect(isInteractive).then((token) => {
-                        resolve(token);
-                    }).catch(() => {
-                        reject('Authorization: ' + chrome.runtime.lastError?.message);
-                    });
+                    console.warn(`Warning: Error authorizing for Chrome browser, attemping auth for Edge browser: ${chrome.runtime.lastError.message}`);
+                    resolve(BGAuthService.AuthorizeUsingRedirect(isInteractive));
                 };
             });
-        });
+        })
     }
 
     /**
@@ -56,17 +49,19 @@ export default class BGAuthService {
         authURL += `&redirect_uri=${encodeURIComponent(redirectURL)}`;
         authURL += `&scope=${encodeURIComponent(scopes.join(' '))}`;
         // authURL += `&prompt=select_account`;
-        console.log(authURL);
+
+        /** @type {chrome.identity.WebAuthFlowOptions} */
+        const options = {
+            interactive: isInteractive,
+            url: authURL
+        };
+
         return new Promise((resolve, reject) => {
-            chrome.identity.launchWebAuthFlow({
-                interactive: isInteractive,
-                url: authURL
-            }, (resp) => {
+            chrome.identity.launchWebAuthFlow(options, (resp) => {
                 if (resp) {
-                    if (isInteractive) {
-                        LocalStorageService.SetValue('IsSignedIn', true);
-                    }
-                    resolve((new URLSearchParams(resp.split("#")[1])).get("access_token"));
+                    isInteractive && LocalStorageService.SetValue('IsSignedIn', true);
+                    const token = (new URLSearchParams(resp.split("#")[1])).get("access_token");
+                    resolve(token);
                 } else (
                     reject('getAuthToken: ' + chrome.runtime.lastError.message)
                 );
