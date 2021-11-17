@@ -61,7 +61,7 @@ let service_worker = {
     addOtherListeners: function() {
 
         chrome.runtime.onInstalled.addListener((evt) => {
-            console.log({ evt });
+            console.log('onInstalled', { evt });
         });
 
 

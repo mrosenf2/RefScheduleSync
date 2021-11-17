@@ -4,13 +4,10 @@ import LocalStorageService from "./services/LocalStorageService.js";
 import Common from "./commonContent.js";
 import HWRGame from "./HWRGame.js";
 import { AuthService, CalendarService } from "./services/ipc.js";
+import ScheduledGame from "./ScheduledGame.js";
 
-export default class HorizonContent {
-    tbID = "schedResults";
-    btnIsSignedIn = "isSignedIn";
-    /** @type {HTMLParagraphElement} */
-    txtIsSignedIn;
-
+export default class HorizonContent extends Common {
+    tbID = "schedResults";    
     titleText = 'Official Game Schedule';
 
     isGameSchedulePage() {
@@ -41,13 +38,8 @@ export default class HorizonContent {
         for (let row of tblRows) {
             if (row.cells) {
                 if (!row.id.toLowerCase().includes("assignment")) {
-
-                    this.txtIsSignedIn = Common.CreateElementSignInSync(isSignedIn);
-                    this.txtIsSignedIn.id = this.btnIsSignedIn;
-                    this.txtIsSignedIn.onclick = () => {
-                        Common.SignInSyncHandler(this.sync.bind(this));
-                    };
-
+                    // create sync row header
+                    this.txtIsSignedIn = this.CreateElementSignInSync(isSignedIn);
                     row.cells[0].replaceChildren(this.txtIsSignedIn);
                 }
                 else {
@@ -142,14 +134,12 @@ export default class HorizonContent {
         /** @type {CalendarEvent[]} */
         let events;
         try {
-            let minDate = hwrGames[0].startDate;
-            let maxDate = hwrGames[hwrGames.length - 1].startDate;
-            events = await CalendarService.getEvents(minDate.toISOString(), maxDate.toISOString());
+            events = await this.getEvents(hwrGames);
         } catch (err) {
             const msg = `unable to fetch events from calendar. Try refreshing the page.\n ${err}`;
             alert(msg);
             console.error(msg, err);
-            this.txtIsSignedIn.innerHTML = "Refresh";
+            this.txtIsSignedIn.innerText = "Refresh";
             for (let gameObj of hwrGames) {
                 gameObj.checkbox.disabled = true;
             }

@@ -3,9 +3,9 @@ import LocalStorageService from "./services/LocalStorageService.js";
 import { AuthService, CalendarService } from "./services/ipc.js";
 import ARBGame from "./ARBGame.js";
 
-export default class ArbiterContent {
+export default class ArbiterContent extends Common {
 
-    btnIsSignedIn = "isSignedIn";
+    
     tbID = "ctl00_ContentHolder_pgeGameScheduleEdit_conGameScheduleEdit_dgGames";
 
     /**
@@ -29,12 +29,9 @@ export default class ArbiterContent {
         for (let row of tblRows) {
             row.insertCell(2);
             if (row.className.toLowerCase().includes("headers")) {
-                let txtIsSignedIn = Common.CreateElementSignInSync(isSignedIn);
-                txtIsSignedIn.id = this.btnIsSignedIn;
-                txtIsSignedIn.onclick = () => {
-                    Common.SignInSyncHandler(this.sync.bind(this));
-                };
-                row.cells[2].replaceChildren(txtIsSignedIn);
+                // create sync row header
+                this.txtIsSignedIn = this.CreateElementSignInSync(isSignedIn);
+                row.cells[2].replaceChildren(this.txtIsSignedIn);
             }
             if (row.className.toLowerCase().includes("items")) {
                 //create sync checkbox
@@ -50,19 +47,21 @@ export default class ArbiterContent {
                     console.trace('cb.disabled = true');
                 }
                 row.cells[2].replaceChildren(cb);
-                let gameObj = new ARBGame(row);
-                stgGames.push(gameObj);
-                totalPay += Number(gameObj.pay.replace(/[^0-9.-]+/g, ""));
+                stgGames.push(new ARBGame(row));
             }
         }
         let el = document.createElement("p");
+        totalPay = stgGames
+            .map(g => Number(g.pay.replace(/[^0-9.-]+/g, "")))
+            .reduce((prev, cur) => prev + cur, 0);
+            
         el.innerText = "Total: " + totalPay.toString();
         document.getElementById(tbID).appendChild(el);
 
     };
 
 
-    async sync(addOnClick = false, prompAddGames = false) {
+    async sync(addOnClick = false, promptAddGames = false) {
         let tbID = this.tbID;
         let tblRows = /** @type {HTMLCollectionOf<HTMLTableRowElement>} */
             (document.getElementById(tbID).children[0].children);
@@ -85,12 +84,12 @@ export default class ArbiterContent {
         /** @type {CalendarEvent[]} */
         let events;
         try {
-            let minDate = arbGames[0].startDate;
-            let maxDate = arbGames[arbGames.length - 1].startDate;
-            events = await CalendarService.getEvents(minDate, maxDate);
+            events = await this.getEvents(arbGames);
         } catch (err) {
-            alert(`unable to fetch events from calendar. Try refreshing the page.\n ${err}`);
-            document.getElementById(this.btnIsSignedIn).innerHTML = "Refresh";
+            const msg = `unable to fetch events from calendar. Try refreshing the page.\n ${err}`;
+            alert(msg);
+            console.error(msg, err);
+            document.getElementById(this.btnIsSignedIn).innerText = "Refresh";
             for (let gameObj of arbGames) {
                 gameObj.checkbox.disabled = true;
             }
@@ -137,7 +136,7 @@ export default class ArbiterContent {
 
         LocalStorageService.SetValue('SyncStatus', 'In Sync');
 
-        if (prompAddGames) {
+        if (promptAddGames) {
             await Common.AddUncheckedGames(uncheckedGames);
         }
     };

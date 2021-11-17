@@ -3,17 +3,19 @@ import LocalStorageService from "./services/LocalStorageService.js";
 import ScheduledGame from "./ScheduledGame.js";
 
 export default class Common {
-    /**
-     * @param {(addOnClick: boolean, promptAddGames: boolean) => void} syncCallback
-     */
-    static async SignInSyncHandler(syncCallback) {
+
+    btnIsSignedIn = "isSignedIn";
+    
+    /** @type {HTMLParagraphElement} */ txtIsSignedIn;
+
+    async SignInSyncHandler() {
         try {
             const isSignedIn = await LocalStorageService.GetValue('IsSignedIn');
             if (isSignedIn) {
-                syncCallback(false, true);
+                this.sync(false, true);
             } else {
                 AuthService.AuthInteractive().then(() => {
-                    syncCallback(false, false);
+                    this.sync(false, false);
                 }).catch((err) => {
                     console.warn('Auth failed:', err);
                 })
@@ -23,15 +25,45 @@ export default class Common {
         }
     }
 
-    static CreateElementSignInSync(isSignedIn) {
+    /**
+     * @abstract
+     * @param {boolean} [_addOnClick]
+     * @param {boolean} [_promptAddGames]
+     */
+    sync(_addOnClick, _promptAddGames) {
+        throw 'not implemented'
+    }
+
+    /**
+     * get calendar events in date range specified by given list of parsed games
+     * @param {ScheduledGame[]} lstGames
+     */
+    async getEvents(lstGames) {
+        let minDate = lstGames[0].startDate;
+        let maxDate = lstGames[lstGames.length - 1].startDate;
+        let events = await CalendarService.getEvents(minDate.toISOString(), maxDate.toISOString());
+        return events;
+    }
+
+    /**
+     * @param {boolean} isSignedIn
+     */
+    CreateElementSignInSync(isSignedIn) {
         let txtIsSignedIn = document.createElement("p");
         if (isSignedIn) {
-            txtIsSignedIn.innerHTML = "Sync";
+            txtIsSignedIn.innerText = "Sync";
             txtIsSignedIn.title = "Click to refresh checkboxes";
         } else {
-            txtIsSignedIn.innerHTML = "Sign in to Sync";
+            txtIsSignedIn.innerText = "Sign in to Sync";
             txtIsSignedIn.title = "Sign In";
         }
+
+        txtIsSignedIn.id = this.btnIsSignedIn;
+        
+        txtIsSignedIn.onclick = () => {
+            this.SignInSyncHandler();
+        };
+
         return txtIsSignedIn;
     }
 
@@ -43,10 +75,8 @@ export default class Common {
         gameObj.checkbox.disabled = true;
         gameObj.calId = gameObj.checkbox.title; //get new calID because it doesnt update from when event listener is first bound
         if (gameObj.checkbox.checked) {
-            //add game to calendar
             await Common.AddGameToCalendar(gameObj);
         } else {
-            //remove game from calendar
             await Common.RemoveGameFromCalendar(gameObj);
         }
         gameObj.checkbox.disabled = false;
@@ -55,7 +85,7 @@ export default class Common {
 
     /** @param {ScheduledGame} gameObj */
     static async AddGameToCalendar(gameObj) {
-        let onError = (err) => {
+        let onError = (/** @type {CalendarEvent} */ err) => {
             gameObj.checkbox.checked = false;
             console.warn('error occurred; calendar not updated', {err});
             alert(`error occurred; calendar not updated \n${err}`);
@@ -76,7 +106,7 @@ export default class Common {
 
     /** @param {ScheduledGame} gameObj */
     static async RemoveGameFromCalendar(gameObj) {
-        let onError = (err) => {
+        let onError = (/** @type {any} */ err) => {
             gameObj.checkbox.checked = true;
             console.warn('error occurred; calendar not updated', { err });
             alert(`error occurred; calendar not updated \n${err}`);

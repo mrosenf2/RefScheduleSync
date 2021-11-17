@@ -33,9 +33,10 @@ export default class Content {
 
         await Content.setSignInStatus();
 
-        LocalStorageService.addListener('SelectedCalendar', (newValue) => {
+        LocalStorageService.addListener('SelectedCalendar', async (newValue) => {
             console.log({newValue});
-            alert('Selected Calendar change. Please refresh the page to sync.');
+            const isSignedIn = await LocalStorageService.GetValue('IsSignedIn');
+            if (isSignedIn) alert('Selected Calendar change. Please refresh the page to sync.');
         });
 
         LocalStorageService.addListener('IsSignedIn', async (newValue) => {
