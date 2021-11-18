@@ -16,6 +16,7 @@
  * | "calendar.getCalendars"
  * | "calendar.getEvents"
  * | "calendar.addGame"
+ * | "calendar.updateGame"
  * | "calendar.removeGame"
  * } serviceName
  */

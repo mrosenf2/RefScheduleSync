@@ -1,5 +1,5 @@
 import LocalStorageService from "../services/LocalStorageService.js";
-import ScheduledGame from "../ScheduledGame.js";
+import ParsedGame from "../ScheduledGame.js";
 import BGAuthService from "./auth.js";
 
 
@@ -13,8 +13,8 @@ export default class BGCalendarService {
         this.isInit = false;
         this.APIURL_get_calendars = 'https://www.googleapis.com/calendar/v3/users/me/calendarList';
         this._APIURL_get_events = 'https://www.googleapis.com/calendar/v3/calendars/{calendarId}/events?maxResults=2000&timeMin={timeMin}&timeMax={timeMax}';
-        this._APIURL_add_events = 'https://www.googleapis.com/calendar/v3/calendars/{calendarId}/events';
-        this._APIURL_del_event = 'https://www.googleapis.com/calendar/v3/calendars/{calendarId}/events/{eventId}';
+        this._APIURL_add_event = 'https://www.googleapis.com/calendar/v3/calendars/{calendarId}/events';
+        this._APIURL_update_del_event = 'https://www.googleapis.com/calendar/v3/calendars/{calendarId}/events/{eventId}';
     }
 
 
@@ -48,11 +48,11 @@ export default class BGCalendarService {
     }
 
     get APIURL_add_events() {
-        return this.insertCalId(this._APIURL_add_events);
+        return this.insertCalId(this._APIURL_add_event);
     }
 
-    get APIURL_del_event() { 
-        return this.insertCalId(this._APIURL_del_event);
+    get APIURL_update_del_event() { 
+        return this.insertCalId(this._APIURL_update_del_event);
     }
 
     get APIURL_get_events() {
@@ -120,20 +120,17 @@ export default class BGCalendarService {
             .replace('{timeMax}', timeMax.toISOString());
     }
 
-    async Post(url, data) {
+    async put_post(method, url, data) {
         try {
             let token = await BGAuthService.GetAuthToken();
             const response = await fetch(url, {
-                method: 'POST', // *GET, POST, PUT, DELETE, etc.
-                // mode: 'cors', // no-cors, *cors, same-origin
-                cache: 'no-cache', // *default, no-cache, reload, force-cache, only-if-cached
+                method,
+                cache: 'no-cache',
                 credentials: 'same-origin', // include, *same-origin, omit
                 headers: {
                     'Authorization': 'Bearer ' + token,
                     'Content-Type': 'application/json'
                 },
-                redirect: 'follow', // manual, *follow, error
-                referrerPolicy: 'no-referrer', // no-referrer, *no-referrer-when-downgrade, origin, origin-when-cross-origin, same-origin, strict-origin, strict-origin-when-cross-origin, unsafe-url
                 body: JSON.stringify(data) // body data type must match "Content-Type" header
             });
             let resp = await response.json();
@@ -143,6 +140,14 @@ export default class BGCalendarService {
             console.error(error);
             return { ok: false, data: error };
         }
+    }
+    
+    async Post(url, data) {
+        return this.put_post('POST', url, data);
+    }
+
+    async Put(url, data) {
+        return this.put_post('PUT', url, data);
     }
 
     /**
@@ -169,40 +174,21 @@ export default class BGCalendarService {
     }
 
     /**
-     * @param {ScheduledGame} gameObj
+     * @param {ParsedGame} serializedGameObj
      */
-    async addGame(gameObj) {
-        console.log("adding game", gameObj);
+    async addGame(serializedGameObj) {
+        console.log("adding game", serializedGameObj);
         if (!this.isInit) {
             return null;
         }
 
-        if (!gameObj.startDate) {
+        if (!serializedGameObj.startDate) {
             throw 'unable to add game: no start date specified'
         }
 
-        let startDate = new Date(gameObj.startDate);
-        let endDate = new Date(gameObj.endDate);
-        if (!endDate.getTime()) {
-            // add 1hr 20mins to start by default
-            endDate = new Date(startDate.getTime() + 1 * 60 * 60 * 1000 + 20 * 60 * 1000);
-        }
-        let data = {
-            "start": {
-                "dateTime": startDate
-            },
-            "end": {
-                "dateTime": endDate
-            },
-            "summary": `${gameObj.level} - ${gameObj.location}`,
-            "location": `${gameObj.address}`,
-            "description": gameObj.eventDescription,
-            "extendedProperties": {
-                "private": {
-                    "created_by": "extension"
-                }
-            }
-        };
+        // gameObj is serialized before being passed to this function.
+        let gameObj = ParsedGame.Deserialize(serializedGameObj);
+        let data = this.getRequestBody(gameObj);
 
         try {
             const response = await this.Post(this.APIURL_add_events, data);
@@ -210,28 +196,83 @@ export default class BGCalendarService {
             return response;
         } catch (error) {
             console.error(error);
-            return error;
+            throw error;
         }
-
-
     };
 
     /**
-     * @param {string | number | boolean} eventID
+     * @param {ParsedGame} serializedGameObj
      */
-    async remGame(eventID) {
+    async updateGame(serializedGameObj) {
+        console.log("updating game", serializedGameObj);
+        if (!this.isInit) {
+            return null;
+        }
+
+        if (!serializedGameObj.startDate) {
+            throw 'unable to update game: no start date specified';
+        }
+
+        // gameObj is serialized before being passed to this function.
+        const gameObj = ParsedGame.Deserialize(serializedGameObj);
+        const data = this.getRequestBody(gameObj);
+
+        const url = this.APIURL_update_del_event.replace('{eventId}', encodeURIComponent(gameObj.CalendarEvent.id));
+        try {
+            const response = await this.Put(url, data);
+            console.log({ response });
+            return response;
+        } catch (error) {
+            console.error(error);
+            throw error;
+        }
+    };
+
+    /**
+     * @param {ParsedGame} gameObj
+     */
+    getRequestBody(gameObj) {
+        return {
+            "start": {
+                "dateTime": gameObj.startDate
+            },
+            "end": {
+                "dateTime": gameObj.endDate
+            },
+            "summary": `${gameObj.level} - ${gameObj.location}`,
+            "location": `${gameObj.address}`,
+            "description": gameObj.getEventDescription(),
+            "extendedProperties": {
+                "private": {
+                    "assignment_id": gameObj.gameID,
+                    "extension_id": "pgdajjngmjfhnoghgoddckkikijklaib"
+                }
+            }
+        };
+    }
+
+    /**
+     * @param {ParsedGame} serializedGameObj
+     */
+    async remGame(serializedGameObj) {
+        let gameObj = ParsedGame.Deserialize(serializedGameObj);
+        if (!gameObj.canDelete) {
+            throw 'unable to remove game: will not remove events unless they are created by this extension.';
+        }
+
+        let eventID = gameObj.CalendarEvent.id;
         console.log("removing game", eventID);
         if (!this.isInit) {
             return null;
         }
-        const url = this.APIURL_del_event.replace('{eventId}', encodeURIComponent(eventID));
+        const url = this.APIURL_update_del_event.replace('{eventId}', encodeURIComponent(eventID));
         try {
             const response = await this.Delete(url);
             console.log({ response });
             return response.ok;
         } catch (error) {
             console.error(error);
-            return error;
+            throw error;
         }
     };
 

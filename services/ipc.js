@@ -1,4 +1,4 @@
-import ScheduledGame from "../ScheduledGame.js";
+import ParsedGame from "../ScheduledGame.js";
 
 /**
  * @param {serviceName} method
@@ -35,15 +35,24 @@ export class CalendarService {
     }
 
     /**
-     * @param {ScheduledGame} gameObj
+     * @param {ParsedGame} gameObj
      * @returns {Promise<{ok: boolean, data: CalendarEvent}>}
      */
     static addGame(gameObj) {
         return sendMessageToBackground('calendar.addGame', { game: gameObj });
     }
 
+
     /**
-     * @param {ScheduledGame} gameObj
+     * @param {ParsedGame} gameObj
+     * @returns {Promise<{ok: boolean, data: CalendarEvent}>}
+     */
+    static updateGame(gameObj) {
+        return sendMessageToBackground('calendar.updateGame', { game: gameObj });
+    }
+
+    /**
+     * @param {ParsedGame} gameObj
      * @returns {Promise<boolean>}
      */
     static removeGame(gameObj) {

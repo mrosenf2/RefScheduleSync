@@ -34,8 +34,11 @@ let service_worker = {
                 case 'calendar.addGame':
                     serviceCall = cal.addGame(params.game);
                     break;
+                case 'calendar.updateGame':
+                    serviceCall = cal.updateGame(params.game);
+                    break;
                 case 'calendar.removeGame':
-                    serviceCall = cal.remGame(params.game.calId);
+                    serviceCall = cal.remGame(params.game);
                     break;
 
             }

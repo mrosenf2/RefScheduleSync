@@ -4,7 +4,6 @@ import LocalStorageService from "./services/LocalStorageService.js";
 import Common from "./commonContent.js";
 import HWRGame from "./HWRGame.js";
 import { AuthService, CalendarService } from "./services/ipc.js";
-import ScheduledGame from "./ScheduledGame.js";
 
 export default class HorizonContent extends Common {
     tbID = "schedResults";    
@@ -92,18 +91,12 @@ export default class HorizonContent extends Common {
      */
     async updateDesc(gameToUpdate) {
         console.log('updating desc of', { gameToUpdate });
-        const isUpdateSuccess = CalendarService.removeGame(gameToUpdate);
-        if (!isUpdateSuccess) {
-            gameToUpdate.checkbox.checked = true;
-            alert("error occurred; calendar not updated");
+        const isUpdateSuccess = await CalendarService.updateGame(gameToUpdate);
+        if (!isUpdateSuccess.ok) {
+            alert(`ERROR UPDATING DESCRIPTION: \n${gameToUpdate.level} - ${gameToUpdate.location} (${gameToUpdate.startDate})`);
         } else {
-            const isAddSuccess = await CalendarService.addGame(gameToUpdate);
-            if (!isAddSuccess.ok) {
-                alert(`ERROR UPDATING DESCRIPTION: \n${gameToUpdate.level} - ${gameToUpdate.location} (${gameToUpdate.startDate})`);
-            } else {
-                alert(`UPDATING DESCRIPTION: \n${gameToUpdate.level} - ${gameToUpdate.location} (${gameToUpdate.startDate})`);
-                console.log('update success');
-            }
+            alert(`UPDATING DESCRIPTION: \n${gameToUpdate.level} - ${gameToUpdate.location} (${gameToUpdate.startDate})`);
+            console.log('update success');
         }
     }
 
@@ -158,7 +151,8 @@ export default class HorizonContent extends Common {
             if (match) {
                 cb.checked = true;
                 cb.title = match.id;
-                gameObj.calId = match.id;
+                gameObj.CalendarEvent = match;
+
 
                 // remove duplicates
                 // TODO: avoid rate limiting
@@ -177,7 +171,7 @@ export default class HorizonContent extends Common {
 
                 gameObj.calId = match.id;
 
-                let isUpdateDesc = match.description != gameObj.eventDescription;
+                let isUpdateDesc = match.description != gameObj.getEventDescription();
 
                 if (isUpdateDesc) {
                     this.updateDesc(gameObj);

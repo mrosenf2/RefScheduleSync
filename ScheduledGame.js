@@ -1,5 +1,8 @@
-export default class ScheduledGame {
+export default class ParsedGame {
 
+    /**
+     * @param {HTMLTableRowElement} row
+     */
     constructor(row) {
         this.row = row;
     }
@@ -58,9 +61,6 @@ export default class ScheduledGame {
     /** @type {string} */
     calId;
 
-    /** @type {string} */
-    eventDescription;
-
     /** @type {boolean} */
     isCancelled;
 
@@ -70,6 +70,24 @@ export default class ScheduledGame {
     async init() {
 
     }
+
+    /**
+     * @param {ParsedGame} serializedGameObj
+     * @returns {ParsedGame}
+     */
+    static Deserialize(serializedGameObj) {
+        let gameObj = Object.assign(new ParsedGame(null), serializedGameObj);
+        gameObj.startDate = new Date(serializedGameObj.startDate);
+        gameObj.endDate = new Date(serializedGameObj.endDate);
+        return gameObj;
+    }
+
+    get canDelete() {
+        return this.CalendarEvent?.extendedProperties?.private?.extension_id ? true : false;
+    }
+
+    /** @type {CalendarEvent} Google Calendar Event object */
+    CalendarEvent;
 
     getEventDescription() {
         return JSON.stringify({

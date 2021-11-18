@@ -1,6 +1,6 @@
 import { AuthService, CalendarService } from "./services/ipc.js";
 import LocalStorageService from "./services/LocalStorageService.js";
-import ScheduledGame from "./ScheduledGame.js";
+import ParsedGame from "./ScheduledGame.js";
 
 export default class Common {
 
@@ -36,7 +36,7 @@ export default class Common {
 
     /**
      * get calendar events in date range specified by given list of parsed games
-     * @param {ScheduledGame[]} lstGames
+     * @param {ParsedGame[]} lstGames
      */
     async getEvents(lstGames) {
         let minDate = lstGames[0].startDate;
@@ -69,7 +69,7 @@ export default class Common {
 
     /**
      * Adds/Removes game
-     * @param {ScheduledGame} gameObj 
+     * @param {ParsedGame} gameObj 
      */
     static async onCBClicked(gameObj) {
         gameObj.checkbox.disabled = true;
@@ -83,7 +83,7 @@ export default class Common {
     }
 
 
-    /** @param {ScheduledGame} gameObj */
+    /** @param {ParsedGame} gameObj */
     static async AddGameToCalendar(gameObj) {
         let onError = (/** @type {CalendarEvent} */ err) => {
             gameObj.checkbox.checked = false;
@@ -96,6 +96,7 @@ export default class Common {
             if (resp.ok) {
                 gameObj.checkbox.checked = true;
                 gameObj.checkbox.title = resp.data.id;
+                gameObj.CalendarEvent = resp.data;
             } else {
                 onError(resp.data);
             }
@@ -104,7 +105,7 @@ export default class Common {
         }
     }
 
-    /** @param {ScheduledGame} gameObj */
+    /** @param {ParsedGame} gameObj */
     static async RemoveGameFromCalendar(gameObj) {
         let onError = (/** @type {any} */ err) => {
             gameObj.checkbox.checked = true;
@@ -126,7 +127,7 @@ export default class Common {
     }
 
     /**
-     * @param {ScheduledGame[]} uncheckedGames
+     * @param {ParsedGame[]} uncheckedGames
      */
     static async AddUncheckedGames(uncheckedGames) {
         if (uncheckedGames.length > 0) {

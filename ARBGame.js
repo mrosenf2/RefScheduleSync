@@ -1,6 +1,6 @@
-import ScheduledGame from "./ScheduledGame.js";
+import ParsedGame from "./ScheduledGame.js";
 
-export default class ARBGame extends ScheduledGame {
+export default class ARBGame extends ParsedGame {
 
 
     /** @returns {Promise<string[]>} */
@@ -52,7 +52,6 @@ export default class ARBGame extends ScheduledGame {
         try {
             super.officials = await this.getOfficials();
             super.address = await this.getLocation();
-            super.eventDescription = this.getEventDescription();
         } catch (error) {
             console.log('Error:', error);
         }
@@ -70,10 +69,11 @@ export default class ARBGame extends ScheduledGame {
         super.checkbox = cb;
 
         const GAME_ID = 0, DATE = 4, LEVEL = 5, LOCATION = 6, HOME_TEAM = 7, AWAY_TEAM = 8, PAY = 9;
-        super.row = row;
         super.gameID = row.cells[GAME_ID].innerText;
         let dateArr = row.cells[DATE].innerText.replace('\n', ' ').split(' ');
         super.startDate = new Date(`${dateArr[1]} ${dateArr[0]} ${dateArr[2]} ${dateArr[3]}`);
+        // add 1hr 20mins to start by default
+        super.endDate = new Date(super.startDate.getTime() + 1 * 60 * 60 * 1000 + 20 * 60 * 1000);
         super.level = row.cells[LEVEL].innerText;
         super.location = row.cells[LOCATION].innerText;
         super.address = "";

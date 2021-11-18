@@ -1,6 +1,6 @@
-import ScheduledGame from "./ScheduledGame.js";
+import ParsedGame from "./ScheduledGame.js";
 
-export default class HWRGame extends ScheduledGame {
+export default class HWRGame extends ParsedGame {
     
     /**
      * @param {HTMLTableRowElement} row
@@ -77,8 +77,6 @@ export default class HWRGame extends ScheduledGame {
         } catch (error) {
             // ignore
         }
-
-        this.eventDescription = this.getEventDescription();
     }
 
     getDurationInMls() {
