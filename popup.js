@@ -1,9 +1,9 @@
-console.log('in popup');
-console.log(window.location.href);
-
 import BGCalendarService from "./background_scripts/CalendarService.js";
 import LocalStorageService from "./services/LocalStorageService.js";
 import { AuthService, CalendarService } from "./services/ipc.js";
+
+console.log('in popup');
+console.log(window.location.href);
 
 // When the popup is loaded, fetch the events in this tab from the
 // background page, set up the appropriate layout, etc.
@@ -22,6 +22,11 @@ const btnSignOut_click = async () => {
     if (result) {
         LocalStorageService.SetValue('IsSignedIn', false);
     }
+};
+
+
+const btnSettings_click = async () => {
+    document.getElementById('settings_container').hidden = !document.getElementById('settings_container').hidden;
 };
 
 class PopupPage {
@@ -44,7 +49,8 @@ class PopupPage {
     static adjustSignInButtons(isSignedIn) {
         this.btnSignIn.hidden = isSignedIn;
         this.btnSignOut.hidden = !isSignedIn;
-        this.selCalendar.hidden = !isSignedIn;
+        this.btnSettings.hidden = !isSignedIn;
+        this.dvStatus.hidden = !isSignedIn;
     }
 
     static async setUserSignedIn() {
@@ -82,7 +88,7 @@ class PopupPage {
     }
 
     static setStatusMessage(msg) {
-        document.getElementById('status_message').innerHTML = msg;
+        document.getElementById('status_message').innerText = msg;
     }
 
 
@@ -91,9 +97,12 @@ class PopupPage {
             this.selCalendar = /** @type {HTMLSelectElement} */ (document.getElementById('drpdwnCalendars'));
             this.btnSignIn = /** @type {HTMLButtonElement} */ (document.getElementById('authorize_button'));
             this.btnSignOut = /** @type {HTMLButtonElement} */ (document.getElementById('signout_button'));
+            this.btnSettings = /** @type {HTMLButtonElement} */ (document.getElementById('settings_button'));
+            this.dvSettings = /** @type {HTMLDivElement} */ document.getElementById('settings_container');
+            this.dvStatus = /** @type {HTMLDivElement} */ document.getElementById('status_container');
 
             document.getElementById('title').innerHTML = await LocalStorageService.GetValue('SchedulingService');
-            document.getElementById('status_message').innerHTML = await LocalStorageService.GetValue('StatusMessage');
+            
 
             this.selCalendar.onchange = (evt) => {
                 let target = /** @type {HTMLOptionElement} */ (evt.target);
@@ -105,6 +114,7 @@ class PopupPage {
 
             this.btnSignIn.onclick = btnSignIn_click;
             this.btnSignOut.onclick = btnSignOut_click;
+            this.btnSettings.onclick = btnSettings_click;
 
             LocalStorageService.addListener('IsSignedIn', (newValue) => {
                 console.log(`Auth changed: ${newValue}`);
@@ -112,8 +122,9 @@ class PopupPage {
             })
 
             LocalStorageService.addListener('StatusMessage', (newValue) => {
-                document.getElementById('status_message').innerHTML = newValue;
+                this.setStatusMessage(newValue);
             })
+            this.setStatusMessage(await LocalStorageService.GetValue('StatusMessage'));
 
             let isSignedIn = await LocalStorageService.GetValue('IsSignedIn');
             this.onUserSignInStatusChange(isSignedIn);

@@ -1,4 +1,4 @@
-import ParsedGame from "./ScheduledGame.js";
+import ParsedGame from "./ParsedGame.js";
 
 export default class ARBGame extends ParsedGame {
 

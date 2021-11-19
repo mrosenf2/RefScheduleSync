@@ -8,29 +8,97 @@
 <style>
   body {
     width: 35em;
-    height: 15em;
-    border: solid darkred 0.2em;
+    min-height: 15em;
+    background: #3f3f3f;
     padding: 1em;
     margin: 0px;
+    border: ridge darkgoldenrod 0.5em;
+    color: white;
+    display: grid;
+    grid-template-rows: 1fr 2fr auto auto;
+  }
+
+  
+
+  .container {
+    display: flex;
+    width: 100%;
+  }
+
+  .status {
+    justify-content: flex-start;
+    flex-direction: column;
+  }
+
+  .status>div {
+    display: flex;
+    align-items: center;
+    margin: 0.25rem;
+  }
+
+  .container label {
+    width: 25%;
+  }
+
+  .container p,
+  .container select {
+    margin: 0em 1em;
+  }
+
+  button {
+    border: 1px solid darkgoldenrod;
+    background: whitesmoke;
+    padding: 0.25rem 1rem;
+    cursor: pointer;
+    height: fit-content;
+  }
+
+  .actions {
+    justify-content: space-between;
+    align-items: flex-end;
+  }
+
+  .settings {
+    padding: 1em;
+    flex-direction: column;
   }
 </style>
 
 <body>
-  <p id="title"></p>
+  <header class="header container" style="grid-row: 1;">
+    <h2 style="margin: 0;">Game Calendar Sync</h2>
+  </header>
 
-  <!--Add buttons to initiate auth sequence and sign out-->
-  <button hidden id="authorize_button">Authorize</button>
-  <button hidden id="signout_button">Sign Out</button>
+  <div id="status_container" style="grid-row: 2;">
+    <div class="status container">
+      <div>
+        <label>Scheduling Tool: </label>
+        <p id="title"> </p>
+      </div>
+      <div>
+        <label>Sync Status: </label>
+        <p id="status_message"></p>
+      </div>
+    </div>
+  </div>
 
-  <select hidden id="drpdwnCalendars"></select>
+  <div class="actions container" style="grid-row: 3;">
 
-  <p id="status_message"></p>
+    <!--Add buttons to initiate auth sequence and sign out-->
+    <button hidden id="authorize_button">Sign In</button>
+    <button hidden id="settings_button">Settings</button>
+    <button hidden id="signout_button">Sign Out</button>
+  </div>
 
-  <img id="active_tab"/>
+  <div hidden id="settings_container" style="grid-row: 4;">
+    <div class="settings container">
+      <div>
+        <label>Selected Calendar: </label>
+        <select id="drpdwnCalendars"></select>
+      </div>
+    </div>
+  </div>  
 
-  <pre id="content" style="white-space: pre-wrap"></pre>
-
-  <!-- <script src="browser_action.js"></script> -->
   <script src="./lib/jquery.min.js"></script>
   <script type="module" src="./popup.js"></script>
 </body>

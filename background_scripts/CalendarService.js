@@ -1,5 +1,5 @@
 import LocalStorageService from "../services/LocalStorageService.js";
-import ParsedGame from "../ScheduledGame.js";
+import ParsedGame from "../ParsedGame.js";
 import BGAuthService from "./auth.js";
 
 

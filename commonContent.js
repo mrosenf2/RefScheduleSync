@@ -1,6 +1,6 @@
 import { AuthService, CalendarService } from "./services/ipc.js";
 import LocalStorageService from "./services/LocalStorageService.js";
-import ParsedGame from "./ScheduledGame.js";
+import ParsedGame from "./ParsedGame.js";
 
 export default class Common {
 

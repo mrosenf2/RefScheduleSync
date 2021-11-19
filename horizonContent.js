@@ -51,7 +51,7 @@ export default class HorizonContent extends Common {
 
                     if (!isSignedIn || !isAccepted) {
                         cb.disabled = true;
-                        console.log('cb.disabled = true', { isSignedIn, isAccepted });
+                        console.log('cb.disabled = true', 'isSignedIn', isSignedIn, 'isAccepted', isAccepted);
                     }
                     row.cells[0].replaceChildren(cb);
                     stgGames.push(new HWRGame(row));
@@ -129,14 +129,21 @@ export default class HorizonContent extends Common {
         try {
             events = await this.getEvents(hwrGames);
         } catch (err) {
+
             const msg = `unable to fetch events from calendar. Try refreshing the page.\n ${err}`;
             alert(msg);
-            console.error(msg, err);
+            if (err == 'Calendar ID not selected') {
+                LocalStorageService.SetValue('SyncStatus', 'Open settings to select a calendar to sync')
+            } else {
+                console.error(msg, {err});
+                LocalStorageService.SetValue('SyncStatus', 'unable to fetch events from calendar.');
+            }
+
             this.txtIsSignedIn.innerText = "Refresh";
             for (let gameObj of hwrGames) {
                 gameObj.checkbox.disabled = true;
             }
-            LocalStorageService.SetValue('SyncStatus', 'unable to fetch events from calendar.');
+            
             return;
         }
 

@@ -49,6 +49,10 @@ export default class LocalStorageService {
         });
     }
 
+    static async ClearState() {
+        await chrome.storage.local.clear();
+    }
+
 
     /**
      * @template {keyof (SessionStorage)} K
@@ -98,6 +102,10 @@ export default class LocalStorageService {
     static addListener(key, callback) {
         chrome.storage.onChanged.addListener((changes, namespace) => {
             for (let [k, v] of Object.entries(changes)) {
+                // no callback if value was changed from false to undefined
+                if (v.oldValue == false && v.newValue == undefined) {
+                    return;
+                }
                 let newValue = v.newValue;
                 if (namespace == 'local' && key == k && v.newValue != v.oldValue) {
                     callback(newValue);
