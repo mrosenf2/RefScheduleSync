@@ -26,7 +26,11 @@ const btnSignOut_click = async () => {
 
 
 const btnSettings_click = async () => {
-    document.getElementById('settings_container').hidden = !document.getElementById('settings_container').hidden;
+    if (chrome.runtime.openOptionsPage) {
+        chrome.runtime.openOptionsPage();
+    } else {
+        window.open(chrome.runtime.getURL('settings.html'));
+    }    
 };
 
 class PopupPage {

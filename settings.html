@@ -1,0 +1,128 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+    <title>Game Calendar Sync Settings</title>
+    <meta charset="utf-8" />
+</head>
+<style>
+
+    * {
+        box-sizing: border-box;
+    }
+
+    :root {
+        --header-height: 5rem
+    }
+
+    body {
+        background: #3f3f3f;
+        /* padding: 1em; */
+        margin: 0px;
+        font-family: "Segoe UI", Tahoma, sans-serif;
+        color: white;
+        display: grid;
+        max-height: 60vh;
+        grid-template-rows: var(--header-height) auto auto;
+        max-width: 900px;
+        font-size: large;
+    }
+
+    .header {
+        position: fixed;
+        top: 0;
+        left: 0;
+        display: flex;
+        width: 100%;
+        padding: 0 2rem;
+        height: var(--header-height);
+        background: #1f1f1f;
+        align-items: center;
+        box-shadow: 0 2px 4px rgba(0, 0, 0, 0.26);
+    }
+
+    .header h1 {
+        font-weight: lighter;
+    }
+
+
+
+    .container {
+        display: flex;
+        width: 65%;
+        margin: 1.5rem 0;
+        padding: 0 2rem;
+    }
+
+    .settings {
+        justify-content: flex-start;
+        flex-direction: column;
+        /* height: max-content; */
+    }
+
+    .settings>div {
+        display: flex;
+        align-items: center;
+        margin: 1rem 0.25rem;
+        justify-content: space-between;
+    }
+
+    .container label {
+        font-weight: bold;
+        font-size: larger;
+    }
+
+    .container p,
+    .container select {
+        margin: 0em 1em;
+        width: 40%;
+        height: 2rem;
+        font-size: large;
+    }
+
+    button {
+        border: 1px solid darkgoldenrod;
+        background: whitesmoke;
+        padding: 0.25rem 1rem;
+        cursor: pointer;
+        margin: 0 0.5em;
+        height: fit-content;
+        font-size: x-large;
+    }
+
+    .actions {
+        justify-content: space-around;
+        align-items: center;
+        width: 40%;
+    }
+</style>
+
+<body>
+    <header class="header" style="grid-row: 1;">
+        <h1>Game Calendar Sync <b> Settings</b></h1>
+    </header>
+
+    <div class="settings container" style="grid-row: 2;">
+        <div>
+            <label>Selected Calendar: </label>
+            <select id="selCalendar"></select>
+        </div>
+        <div>
+            <label>TimeZone: </label>
+            <select id="selTimezone"></select>
+        </div>
+    </div>
+
+    <div class="actions container" style="grid-row: 3;">
+        <!--Add buttons to initiate auth sequence and sign out-->
+        <button id="btnSave">Save</button>
+        <button id="btnCancel">Cancel</button>
+    </div>
+
+
+
+    <script src="./lib/jquery.min.js"></script>
+    <script type="module" src="./settings.js"></script>
+</body>
+
+</html>
