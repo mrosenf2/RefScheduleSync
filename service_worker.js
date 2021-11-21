@@ -61,7 +61,7 @@ let service_worker = {
 
     },
 
-    addOtherListeners: function() {
+    addOtherListeners: function () {
 
         chrome.runtime.onInstalled.addListener((evt) => {
             console.log('onInstalled', { evt });
@@ -91,18 +91,18 @@ let service_worker = {
 
 
 
-function onTabUpdate() {
+async function onTabUpdate() {
     let queryOptions = { active: true, currentWindow: true };
-    chrome.tabs.query(queryOptions, (async (tabs) => {
-        if (tabs.length > 0) {
-            let url = tabs[0].url;
-            if ((url.includes('horizon') || url.includes('arbiter'))) {
-                LocalStorageService.SetValue('StatusMessage', await LocalStorageService.GetValue('SyncStatus'));
-            } else {
-                LocalStorageService.SetValue('StatusMessage', "Current page is not a schedule");
-            }
+    const tabs = await chrome.tabs.query(queryOptions);
+    if (tabs.length > 0) {
+        let url = tabs[0].url;
+        if ((url.includes('horizon') || url.includes('arbiter'))) {
+            LocalStorageService.SetValue('StatusMessage', await LocalStorageService.GetValue('SyncStatus'));
+        } else {
+            LocalStorageService.SetValue('StatusMessage', "Current page is not a schedule");
         }
-    }));
+    }
+
 }
 
 

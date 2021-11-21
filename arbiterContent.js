@@ -81,18 +81,8 @@ export default class ArbiterContent extends Common {
             return;
         }
 
-        /** @type {CalendarEvent[]} */
-        let events;
-        try {
-            events = await this.getEvents(arbGames);
-        } catch (err) {
-            const msg = `unable to fetch events from calendar. Try refreshing the page.\n ${err}`;
-            alert(msg);
-            console.error(msg, err);
-            document.getElementById(this.btnIsSignedIn).innerText = "Refresh";
-            for (let gameObj of arbGames) {
-                gameObj.checkbox.disabled = true;
-            }
+        let events = await this.getEvents(arbGames);
+        if (events == undefined) {
             return;
         }
 

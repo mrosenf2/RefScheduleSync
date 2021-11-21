@@ -124,34 +124,15 @@ export default class HorizonContent extends Common {
             return;
         }
 
-        /** @type {CalendarEvent[]} */
-        let events;
-        try {
-            events = await this.getEvents(hwrGames);
-        } catch (err) {
-
-            const msg = `unable to fetch events from calendar. Try refreshing the page.\n ${err}`;
-            alert(msg);
-            if (err == 'Calendar ID not selected') {
-                LocalStorageService.SetValue('SyncStatus', 'Open settings to select a calendar to sync')
-            } else {
-                console.error(msg, {err});
-                LocalStorageService.SetValue('SyncStatus', 'unable to fetch events from calendar.');
-            }
-
-            this.txtIsSignedIn.innerText = "Refresh";
-            for (let gameObj of hwrGames) {
-                gameObj.checkbox.disabled = true;
-            }
-            
+        let events = await this.getEvents(hwrGames);
+        if (events == undefined) {
             return;
         }
-
 
         let uncheckedGames = [];
         for (let gameObj of hwrGames) {
 
-            var match = events.find(ev => ev.description?.includes(gameObj.gameID.replace("-", "")));
+            var match = events.find(ev => gameObj.isMatch(ev));
             let cb = gameObj.checkbox;
             let isDisabled = cb.disabled;
             cb.disabled = true;

@@ -14,4 +14,8 @@
  * Message to display in extension popup
  * 
  * @property {string} SyncStatus
+ * 
+ * @property {string} SelectedTimezone
+ * Timezone user has selected. When undefined, use system default
+ * 
  */

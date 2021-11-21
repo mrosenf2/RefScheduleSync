@@ -24,12 +24,11 @@ const btnCancel_click = async () => {
 };
 
 const timezones = [
-    "Same as system",
     "US/Eastern",
     "US/Central",
     "US/Mountain",
     "US/Pacific"
-]
+];
 
 
 class SettingsPage {
@@ -49,7 +48,7 @@ class SettingsPage {
     /** @type {Calendar[]} */
     static UserCalendars;
 
-    
+
 
     static async setUserSignedIn() {
         try {
@@ -67,19 +66,30 @@ class SettingsPage {
                 }
             });
 
+            let idxDefaultTz = undefined;
+            let idxSelectedTz = undefined;
+            let selectedTz = await LocalStorageService.GetValue('SelectedTimezone');
             timezones.forEach((tz, idx) => {
+                let date = new Date();
+                let strCurrentLocale = date.toLocaleString()
+                let strSelectedTzLocal = date.toLocaleString("en-US", { timeZone: selectedTz });
+                let strTzLocale = date.toLocaleString("en-US", { timeZone: tz })
+                if (strTzLocale == strCurrentLocale) {
+                    idxDefaultTz = idx;
+                    tz += "*";
+                }
+
+                if (strTzLocale == strSelectedTzLocal) {
+                    idxSelectedTz = idx;
+                }
+
                 var opt = document.createElement('option');
-                opt.value = tz
-                opt.innerText = tz
+                opt.value = tz;
+                opt.innerText = tz;
                 this.selTimezone.appendChild(opt);
 
-                if (tz != timezones[0]) {
-                    if (new Date().toLocaleString("en-US", { timeZone: tz }) == new Date().toLocaleString()) {
-                        this.selTimezone.selectedIndex = idx;
-                    }
-                }
-                
-            })
+            });
+            this.selTimezone.selectedIndex = idxSelectedTz ?? idxDefaultTz;
 
         } catch (error) {
             console.warn(error);
@@ -93,7 +103,7 @@ class SettingsPage {
             this.selTimezone = /** @type {HTMLSelectElement} */ (document.getElementById('selTimezone'));
             this.btnSave = /** @type {HTMLButtonElement} */ (document.getElementById('btnSave'));
             this.btnCancel = /** @type {HTMLButtonElement} */ (document.getElementById('btnCancel'));
-            
+
 
 
             this.selCalendar.onchange = (evt) => {
@@ -107,7 +117,7 @@ class SettingsPage {
             this.btnSave.onclick = btnSave_click;
             this.btnCancel.onclick = btnCancel_click;
 
-            SettingsPage.setUserSignedIn()
+            SettingsPage.setUserSignedIn();
 
         } catch (error) {
             console.log(error);

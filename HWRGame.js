@@ -84,4 +84,12 @@ export default class HWRGame extends ParsedGame {
         const mins_ms = this.duration_mins * 60 * 1000;
         return hours_ms + mins_ms;
     }
+
+
+    /**
+     * @param {CalendarEvent} calendarEvent
+     */
+    isMatch(calendarEvent) {
+        return calendarEvent.description?.includes(this.gameID.replace("-", ""))
+    }
 }

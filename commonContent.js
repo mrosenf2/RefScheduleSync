@@ -37,12 +37,34 @@ export default class Common {
     /**
      * get calendar events in date range specified by given list of parsed games
      * @param {ParsedGame[]} lstGames
+     * @returns {Promise<CalendarEvent[]>}
      */
     async getEvents(lstGames) {
         let minDate = lstGames[0].startDate;
         let maxDate = lstGames[lstGames.length - 1].startDate;
-        let events = await CalendarService.getEvents(minDate.toISOString(), maxDate.toISOString());
-        return events;
+
+        try {
+            let events = await CalendarService.getEvents(minDate.toISOString(), maxDate.toISOString());
+            return events;
+        } catch (err) {
+            const msg = `unable to fetch events from calendar. Try refreshing the page.\n ${err}`;
+            alert(msg);
+            if (err == 'Calendar ID not selected') {
+                LocalStorageService.SetValue('SyncStatus', 'Open settings to select a calendar to sync');
+            } else {
+                console.error(msg, { err });
+                LocalStorageService.SetValue('SyncStatus', 'unable to fetch events from calendar.');
+            }
+
+            this.txtIsSignedIn.innerText = "Refresh";
+
+            // error occured getting events
+            for (let gameObj of lstGames) {
+                gameObj.checkbox.disabled = true;
+            }
+
+            return undefined;
+        }
     }
 
     /**

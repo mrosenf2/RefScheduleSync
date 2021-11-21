@@ -6,7 +6,6 @@
     <meta charset="utf-8" />
 </head>
 <style>
-
     * {
         box-sizing: border-box;
     }
@@ -72,12 +71,20 @@
         font-size: larger;
     }
 
-    .container p,
     .container select {
+        height: 2rem;
+        width: 100%;
+        font-size: large;
+    }
+
+    .container .input {
         margin: 0em 1em;
         width: 40%;
-        height: 2rem;
-        font-size: large;
+    }
+
+    .subscript {
+        font-size: small;
+        margin: 0;
     }
 
     button {
@@ -105,11 +112,14 @@
     <div class="settings container" style="grid-row: 2;">
         <div>
             <label>Selected Calendar: </label>
-            <select id="selCalendar"></select>
+            <select class="input" id="selCalendar"></select>
         </div>
         <div>
             <label>TimeZone: </label>
-            <select id="selTimezone"></select>
+            <div class="input">
+                <select id="selTimezone"></select>
+                <p class="subscript">* = current system default</p>
+            </div>
         </div>
     </div>
 
