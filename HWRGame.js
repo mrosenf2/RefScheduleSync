@@ -1,14 +1,36 @@
 import ParsedGame from "./ParsedGame.js";
 
 export default class HWRGame extends ParsedGame {
-    
+
     /**
      * @param {HTMLTableRowElement} row
      */
-    constructor(row) {
+    constructor(row, isSignedIn = true) {
         super(row);
 
-        let cb = /** @type {HTMLInputElement} */ (row.cells[0].children[0]);
+        /** @type {boolean} */ let isAccepted;
+        /** @type {HTMLInputElement} */ let cb;
+        if (![...row.cells].find(c => c.className == 'sync')) {
+            //create sync checkbox
+            cb = document.createElement("input");
+            cb.type = "checkbox";
+            if (row.cells.length >= 11) {
+                isAccepted = true;
+            }
+
+            if (!isSignedIn || !isAccepted) {
+                cb.disabled = true;
+                console.log('cb.disabled = true', 'isSignedIn', isSignedIn, 'isAccepted', isAccepted);
+            }
+            row.cells[0].replaceChildren(cb);
+            // for (const cell of row.cells) {
+            //     cell.className = "blur"
+            // }
+            row.cells[0].className = "sync";
+        } else {
+            cb = /** @type {HTMLInputElement} */ (row.cells[0].children[0]);
+        }
+
         this.checkbox = cb;
 
         const GAME_ID = 0, DATE = 1, TIME = 2, LEVEL = 3, LOCATION = 6, HOME_TEAM = 4, AWAY_TEAM = 5, PAY = 7, OFFICIALS = 9, GAME_DETAILS = 10;
@@ -44,10 +66,10 @@ export default class HWRGame extends ParsedGame {
         this.gameID = row.id;
         const strDate = row.cells[DATE].innerText;
         const strTime = row.cells[TIME].innerText.replace('am', ' am').replace('pm', ' pm');
-        this.startDate = new Date(Date.parse(`${strDate} ${strTime}`))
+        this.startDate = new Date(Date.parse(`${strDate} ${strTime}`));
         this.duration_hrs = Number(duration_hrs);
         this.duration_mins = Number(duration_mins);
-        this.endDate = new Date(this.startDate.getTime() + this.getDurationInMls())
+        this.endDate = new Date(this.startDate.getTime() + this.getDurationInMls());
         this.level = row.cells[LEVEL].innerText;
         this.location = location_text;
         // @ts-ignore
@@ -67,12 +89,12 @@ export default class HWRGame extends ParsedGame {
             if (row.cells[GAME_DETAILS].innerText.includes("CANCELLED")) {
                 this.level = `[CANCELLED] ${this.level}`;
                 this.isCancelled = true;
-                cb.style.visibility = 'hidden';
+                this.checkbox.style.visibility = 'hidden';
             }
 
             if (row.cells[GAME_DETAILS].childElementCount >= 5) {
                 this.isAccepted = false;
-                cb.style.visibility = 'hidden';
+                this.checkbox.style.visibility = 'hidden';
             }
         } catch (error) {
             // ignore
@@ -90,6 +112,6 @@ export default class HWRGame extends ParsedGame {
      * @param {CalendarEvent} calendarEvent
      */
     isMatch(calendarEvent) {
-        return calendarEvent.description?.includes(this.gameID.replace("-", ""))
+        return calendarEvent.description?.includes(this.gameID.replace("-", ""));
     }
 }

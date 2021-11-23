@@ -24,8 +24,7 @@ export default class ArbiterContent extends Common {
 
         const isSignedIn = await LocalStorageService.GetValue('IsSignedIn');
 
-        /** @type {Boolean} */
-        let isAccepted;
+        
         for (let row of tblRows) {
             row.insertCell(2);
             if (row.className.toLowerCase().includes("headers")) {
@@ -34,20 +33,7 @@ export default class ArbiterContent extends Common {
                 row.cells[2].replaceChildren(this.txtIsSignedIn);
             }
             if (row.className.toLowerCase().includes("items")) {
-                //create sync checkbox
-                let cb = document.createElement("input");
-                cb.type = "checkbox";
-
-                if (row.cells.length >= 11) {
-                    isAccepted = row.cells[10].textContent.search("Accepted") > 0;
-                }
-
-                if (!isSignedIn || !isAccepted) {
-                    cb.disabled = true;
-                    console.trace('cb.disabled = true');
-                }
-                row.cells[2].replaceChildren(cb);
-                stgGames.push(new ARBGame(row));
+                stgGames.push(new ARBGame(row, isSignedIn));
             }
         }
         let el = document.createElement("p");
@@ -99,6 +85,7 @@ export default class ArbiterContent extends Common {
                 cb.checked = true;
                 cb.title = match.id;
                 gameObj.calId = match.id;
+                gameObj.CalendarEvent = match;
 
 
                 if (isCanceled) {

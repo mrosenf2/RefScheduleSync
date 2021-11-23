@@ -32,7 +32,6 @@ export default class HorizonContent extends Common {
 
 
         /** @type {HWRGame[]} */ let stgGames = [];
-        /** @type {boolean} */ let isAccepted;
 
         for (let row of tblRows) {
             if (row.cells) {
@@ -42,19 +41,8 @@ export default class HorizonContent extends Common {
                     row.cells[0].replaceChildren(this.txtIsSignedIn);
                 }
                 else {
-                    //create sync checkbox
-                    var cb = document.createElement("input");
-                    cb.type = "checkbox";
-                    if (row.cells.length >= 11) {
-                        isAccepted = true;
-                    }
-
-                    if (!isSignedIn || !isAccepted) {
-                        cb.disabled = true;
-                        console.log('cb.disabled = true', 'isSignedIn', isSignedIn, 'isAccepted', isAccepted);
-                    }
-                    row.cells[0].replaceChildren(cb);
-                    stgGames.push(new HWRGame(row));
+                    
+                    stgGames.push(new HWRGame(row, isSignedIn));
                 }
             }
         }
