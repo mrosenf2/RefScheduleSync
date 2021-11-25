@@ -9,7 +9,6 @@ export default class Content {
         const isAuth = await AuthService.IsSignedIn();
         const isUserSignedIn = await LocalStorageService.GetValue('IsSignedIn');
         const isSignedIn = isAuth && isUserSignedIn;
-        console.log({isAuth, isUserSignedIn});
         console.log("Setting signin status", isSignedIn);
         LocalStorageService.SetValue('IsSignedIn', isSignedIn);
     }
@@ -27,10 +26,7 @@ export default class Content {
             console.log("Initializing for arbitersports");
             LocalStorageService.SetValue('SchedulingService', 'Arbiter');
         }
-
-        const state = await LocalStorageService.GetState();
-        console.log({state});
-
+        
         await Content.setSignInStatus();
 
         LocalStorageService.addListener('SelectedCalendar', async (newValue) => {

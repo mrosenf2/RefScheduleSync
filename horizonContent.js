@@ -3,16 +3,20 @@
 import LocalStorageService from "./services/LocalStorageService.js";
 import Common from "./commonContent.js";
 import HWRGame from "./HWRGame.js";
-import { AuthService, CalendarService } from "./services/ipc.js";
+import { CalendarService } from "./services/ipc.js";
 
 export default class HorizonContent extends Common {
-    tbID = "schedResults";    
+    tbID = "schedResults";
     titleText = 'Official Game Schedule';
 
     isGameSchedulePage() {
         let titleEl = [...document.getElementsByTagName('i')]
             .filter((e) => e.textContent.includes(this.titleText));
         return titleEl.length > 0;
+    }
+
+    getScheduleTableRows() {
+        return /** @type {NodeListOf<HTMLTableRowElement>} */(document.querySelectorAll(`#${this.tbID} tr`));
     }
 
     /**
@@ -26,49 +30,36 @@ export default class HorizonContent extends Common {
         }
 
         const isSignedIn = await LocalStorageService.GetValue('IsSignedIn');
+        let [headerRow, ...itemRows] = this.getScheduleTableRows();
 
-        let tblRows = /** @type {HTMLCollectionOf<HTMLTableRowElement>} */
-            (document.getElementById(this.tbID).children[0].children);
+        // create sync row header
+        this.txtIsSignedIn = this.CreateElementSignInSync(isSignedIn);
+        headerRow.cells[0].replaceChildren(this.txtIsSignedIn);
 
+        let parsedGames = itemRows.map(row => new HWRGame(row, isSignedIn));
 
-        /** @type {HWRGame[]} */ let stgGames = [];
-
-        for (let row of tblRows) {
-            if (row.cells) {
-                if (!row.id.toLowerCase().includes("assignment")) {
-                    // create sync row header
-                    this.txtIsSignedIn = this.CreateElementSignInSync(isSignedIn);
-                    row.cells[0].replaceChildren(this.txtIsSignedIn);
-                }
-                else {
-                    
-                    stgGames.push(new HWRGame(row, isSignedIn));
-                }
-            }
-        }
-        for (let i = 0; i < stgGames.length - 1; i++) {
-            const g1 = stgGames[i];
-            const g2 = stgGames[i + 1];
-            if (checkTimeBetweenGames(g1, g2)) {
+        for (let i = 0; i < parsedGames.length - 1; i++) {
+            const g1 = parsedGames[i];
+            const g2 = parsedGames[i + 1];
+            if (this.checkTimeBetweenGames(g1, g2)) {
                 g2.row.classList.add("warnTimeBetweenGames");
             }
 
         }
+    }
 
-        /**
+    /**
          * @param {HWRGame} g1 
          * @param {HWRGame} g2 
          * @returns {Boolean}
          */
-        function checkTimeBetweenGames(g1, g2) {
-            if (g1.address == g2.address) {
-                return false;
-            }
-            
-            // check that game 2 starts at least 1 hour after game 1 ends
-            return g2.startDate.getTime() <= g1.endDate.getTime() + 1000 * 60 * 60;
-
+    checkTimeBetweenGames(g1, g2) {
+        if (g1.address == g2.address) {
+            return false;
         }
+
+        // check that game 2 starts at least 1 hour after game 1 ends
+        return g2.startDate.getTime() <= g1.endDate.getTime() + 1000 * 60 * 60;
 
     }
 
@@ -95,23 +86,10 @@ export default class HorizonContent extends Common {
             return;
         }
 
-        let tbID = this.tbID;
-        let tblRows = /** @type {HTMLCollectionOf<HTMLTableRowElement>} */
-            (document.getElementById(tbID).children[0].children);
+        let [header, ...items] = this.getScheduleTableRows();
 
         // First, gather data from all games on page
-
-        /** @type {HWRGame[]} */
-        let hwrGames = [];
-        for (let row of tblRows) {
-            if (row.id.toLowerCase().includes("assignment")) {
-                hwrGames.push(new HWRGame(row));
-            }
-        }
-        if (hwrGames.length == 0) {
-            return;
-        }
-
+        let hwrGames = items.map(row => new HWRGame(row));
         let events = await this.getEvents(hwrGames);
         if (events == undefined) {
             return;

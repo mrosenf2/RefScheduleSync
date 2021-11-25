@@ -6,6 +6,11 @@ p#isSignedIn {
     font-size: 1.2em;
 }
 
+
 tr.warnTimeBetweenGames {
     background: orange;
+}
+
+.blur {
+    filter: blur(5px);
 }

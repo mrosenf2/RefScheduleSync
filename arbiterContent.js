@@ -5,54 +5,44 @@ import ARBGame from "./ARBGame.js";
 
 export default class ArbiterContent extends Common {
 
-    
     tbID = "ctl00_ContentHolder_pgeGameScheduleEdit_conGameScheduleEdit_dgGames";
+
+    getScheduleTableRows() {
+        return /** @type {NodeListOf<HTMLTableRowElement>} */(document.querySelectorAll(`#${this.tbID} tr`));
+    }
 
     /**
      * Adds column to table. Sends info about games to background listener.
      */
     async addSyncColumn() {
-        let tbID = this.tbID;
-        let tblRows = /** @type {HTMLCollectionOf<HTMLTableRowElement>} */
-            (document.getElementById(tbID).children[0].children);
         let totalPay = 0;
-
-        /** @type {ARBGame[]} */
-        let stgGames = [];
-
 
 
         const isSignedIn = await LocalStorageService.GetValue('IsSignedIn');
+        let rows = [...this.getScheduleTableRows()];
+        rows.forEach(row => row.insertCell(2));
 
+        let [headerRow, ...itemRows] = rows;
         
-        for (let row of tblRows) {
-            row.insertCell(2);
-            if (row.className.toLowerCase().includes("headers")) {
-                // create sync row header
-                this.txtIsSignedIn = this.CreateElementSignInSync(isSignedIn);
-                row.cells[2].replaceChildren(this.txtIsSignedIn);
-            }
-            if (row.className.toLowerCase().includes("items")) {
-                stgGames.push(new ARBGame(row, isSignedIn));
-            }
-        }
+        // create sync row header
+        this.txtIsSignedIn = this.CreateElementSignInSync(isSignedIn);
+        headerRow.cells[2].replaceChildren(this.txtIsSignedIn);
+
+        let parsedGames = itemRows.map(row => new ARBGame(row, isSignedIn));
+        
         let el = document.createElement("p");
-        totalPay = stgGames
+        totalPay = parsedGames
             .map(g => Number(g.pay.replace(/[^0-9.-]+/g, "")))
             .reduce((prev, cur) => prev + cur, 0);
             
         el.innerText = "Total: " + totalPay.toString();
-        document.getElementById(tbID).appendChild(el);
+        document.getElementById(this.tbID).appendChild(el);
 
     };
 
 
     async sync(addOnClick = false, promptAddGames = false) {
-        let tbID = this.tbID;
-        let tblRows = /** @type {HTMLCollectionOf<HTMLTableRowElement>} */
-            (document.getElementById(tbID).children[0].children);
-
-
+        let tblRows = this.getScheduleTableRows();
 
         // First, gather data from all games on page
 

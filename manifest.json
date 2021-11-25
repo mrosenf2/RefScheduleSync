@@ -1,14 +1,11 @@
 {
-  "name": "Arbiter CalendarSync",
+  "name": "Ref Schedule Sync",
   "key": "MIIBIjANBgkqhkiG9w0BAQEFAAOCAQ8AMIIBCgKCAQEAqaXv3t1jWek67zLpVXIAUWPuCDmbt4KRWQJM8TSBKkvhsw9gmnmVWWzW6yieUQzMDLOJzIJZQgbgRUEvf8ozWG5Evqx+CVTtG5vWcYY5cgocq5sEbhJFiDLZQbeGt61lrjcWAnq4GlDXW9Qbd95EcMyHc80O/jzUjdWctVWTiLal4GVd1tRpKBKnE3jMD7rLGZ6hgkJjxWum2uV5a5U185bYIoLEr6OlGG3tPm0XUtoSpvNBexm6qOFRgATt6/XJlbaCremtKcO1kfoekvIcwjHDJtBfOznXvCSKRN+idQBPO9KaJzMJ/vJ2KT24G7X7W1mIpviMLP2ndMwxoibwCwIDAQAB",
   "version": "1.0",
-  "description": "Add games from Arbiter to your Google calendar",
+  "description": "Add games from Arbiter or HorizonWebRef to your Google calendar",
   "permissions": [
     "storage",
-    "declarativeContent",
     "tabs",
-    "activeTab",
-    "debugger",
     "identity"
   ],
   "action": {
@@ -31,8 +28,8 @@
   "content_scripts": [
     {
       "matches": [
-        "*://*.arbitersports.com/Official/GameScheduleEdit.aspx",
-        "*://www.horizonwebref.com/?*pageID=1102*"
+        "https://www1.arbitersports.com/Official/GameScheduleEdit.aspx",
+        "https://www.horizonwebref.com/?*pageID=1102*"
       ],
       "css": ["main.css"],
       "js": [
