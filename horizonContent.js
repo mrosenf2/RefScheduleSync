@@ -23,12 +23,6 @@ export default class HorizonContent extends Common {
     * Adds column to table. Sends info about games to background listener.
     */
     async addSyncColumn() {
-
-        if (!this.isGameSchedulePage()) {
-            console.log(`Expected title ${this.titleText} not found`);
-            return;
-        }
-
         const isSignedIn = await LocalStorageService.GetValue('IsSignedIn');
         let [headerRow, ...itemRows] = this.getScheduleTableRows();
 

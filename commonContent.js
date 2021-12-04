@@ -35,11 +35,22 @@ export default class Common {
     }
 
     /**
+     * @abstract
+     * @returns {boolean}
+     */
+    isGameSchedulePage() {
+        throw 'not implemented'
+    }
+
+    /**
      * get calendar events in date range specified by given list of parsed games
      * @param {ParsedGame[]} lstGames
      * @returns {Promise<CalendarEvent[]>}
      */
     async getEvents(lstGames) {
+        if (lstGames.length == 0) {
+            return undefined;
+        }
         let minDate = lstGames[0].startDate;
         let maxDate = lstGames[lstGames.length - 1].startDate;
 

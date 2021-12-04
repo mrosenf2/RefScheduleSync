@@ -49,6 +49,9 @@ export default class Content {
         });
 
         try {
+            if (!scheduler.isGameSchedulePage()) {
+                return;
+            }
             await scheduler.addSyncColumn();
             scheduler.sync(true);
         } catch (err) {

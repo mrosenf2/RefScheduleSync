@@ -7,8 +7,13 @@ export default class ArbiterContent extends Common {
 
     tbID = "ctl00_ContentHolder_pgeGameScheduleEdit_conGameScheduleEdit_dgGames";
 
+    isGameSchedulePage() {
+        // TODO...
+        return true;
+    }
+
     getScheduleTableRows() {
-        return /** @type {NodeListOf<HTMLTableRowElement>} */(document.querySelectorAll(`#${this.tbID} tr`));
+        return /** @type {NodeListOf<HTMLTableRowElement>} */(document.querySelectorAll('tr.headers, tr.items, tr.alternatingItems'));
     }
 
     /**
@@ -23,18 +28,18 @@ export default class ArbiterContent extends Common {
         rows.forEach(row => row.insertCell(2));
 
         let [headerRow, ...itemRows] = rows;
-        
+
         // create sync row header
         this.txtIsSignedIn = this.CreateElementSignInSync(isSignedIn);
         headerRow.cells[2].replaceChildren(this.txtIsSignedIn);
 
         let parsedGames = itemRows.map(row => new ARBGame(row, isSignedIn));
-        
+
         let el = document.createElement("p");
         totalPay = parsedGames
             .map(g => Number(g.pay.replace(/[^0-9.-]+/g, "")))
             .reduce((prev, cur) => prev + cur, 0);
-            
+
         el.innerText = "Total: " + totalPay.toString();
         document.getElementById(this.tbID).appendChild(el);
 
@@ -46,16 +51,9 @@ export default class ArbiterContent extends Common {
 
         // First, gather data from all games on page
 
-        /** @type {ARBGame[]} */
-        let arbGames = [];
-        for (let row of tblRows) {
-            if (row.className.toLowerCase().includes("items")) {
-                arbGames.push(new ARBGame(row));
-            }
-        }
-        if (arbGames.length == 0) {
-            return;
-        }
+        let arbGames = [...tblRows]
+            .filter(row => row.className.toLowerCase().includes("items"))
+            .map(row => new ARBGame(row));
 
         let events = await this.getEvents(arbGames);
         if (events == undefined) {
